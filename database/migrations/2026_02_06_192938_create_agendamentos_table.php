@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('observacoes')->nullable();
             $table->enum('status', ['agendado', 'concluido', 'cancelado'])->default('agendado');
             $table->decimal('valor', 8, 2);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

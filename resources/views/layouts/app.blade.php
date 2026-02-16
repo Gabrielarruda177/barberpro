@@ -35,12 +35,7 @@
                         <span>Agendamentos</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('agendamentos.create') }}" class="nav-item {{ request()->routeIs('agendamentos.create') ? 'active' : '' }}">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Novo Agendamento</span>
-                    </a>
-                </li>
+              
                 <li>
                     <a href="{{ route('barbeiros.index') }}" class="nav-item {{ request()->routeIs('barbeiros.*') ? 'active' : '' }}">
                         <i class="fas fa-user-tie"></i>

@@ -1,711 +1,233 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="appointments-page">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="header-content">
-            <div class="header-text">
-                <h1 class="page-title">Gerenciar Agendamentos</h1>
-                <p class="page-subtitle">Visualize e gerencie todos os agendamentos da sua barbearia</p>
-            </div>
-            <a href="{{ route('agendamentos.create') }}" class="btn-primary">
-                <i class="fas fa-plus"></i>
-                Novo Agendamento
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>
+            Agenda de Agendamentos
+        </h2>
+        <div class="btn-group">
+            <a href="{{ route('agendamentos.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Novo Agendamento
             </a>
         </div>
     </div>
 
-    <!-- Filters Card -->
-    <div class="filters-card">
-        <div class="filters-header">
-            <h3 class="filters-title">
-                <i class="fas fa-filter"></i>
-                Filtrar Agendamentos
-            </h3>
-        </div>
-        <form method="GET" action="{{ route('agendamentos.index') }}" class="filters-form">
-            <div class="filters-grid">
-                <div class="form-group">
-                    <label for="filter_data" class="form-label">
-                        <i class="fas fa-calendar"></i>
-                        Data
-                    </label>
-                    <input type="date" id="filter_data" name="data" value="{{ request('data') }}" class="form-input">
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('agendamentos.index') }}" class="row g-3" id="filterForm">
+                <input type="hidden" name="view" value="{{ $viewMode }}">
+                
+                <div class="col-md-3">
+                    <label class="form-label">Mês/Ano</label>
+                    <input type="month" name="selected_date" class="form-control" 
+                           value="{{ $selectedDate->format('Y-m') }}">
                 </div>
-                <div class="form-group">
-                    <label for="filter_status" class="form-label">
-                        <i class="fas fa-flag"></i>
-                        Status
-                    </label>
-                    <select id="filter_status" name="status" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="agendado" {{ request('status') == 'agendado' ? 'selected' : '' }}>Agendado</option>
-                        <option value="concluido" {{ request('status') == 'concluido' ? 'selected' : '' }}>Concluído</option>
-                        <option value="cancelado" {{ request('status') == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="filter_barbeiro" class="form-label">
-                        <i class="fas fa-user-tie"></i>
-                        Barbeiro
-                    </label>
-                    <select id="filter_barbeiro" name="barbeiro_id" class="form-select">
+                <div class="col-md-3">
+                    <label class="form-label">Barbeiro</label>
+                    <select name="barbeiro_id" class="form-select">
                         <option value="">Todos</option>
                         @foreach($barbeiros as $barbeiro)
-                            <option value="{{ $barbeiro->id }}" {{ request('barbeiro_id') == $barbeiro->id ? 'selected' : '' }}>
+                            <option value="{{ $barbeiro->id }}" 
+                                    {{ $barbeiroId == $barbeiro->id ? 'selected' : '' }}>
                                 {{ $barbeiro->nome }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-            </div>
-            <div class="filters-actions">
-                <button type="submit" class="btn-filter">
-                    <i class="fas fa-search"></i>
-                    Filtrar
-                </button>
-                <a href="{{ route('agendamentos.index') }}" class="btn-clear">
-                    <i class="fas fa-times"></i>
-                    Limpar
-                </a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Results Summary -->
-    <div class="results-summary">
-        <p class="results-text">
-            Encontrados <strong>{{ $agendamentos->count() }}</strong> agendamentos
-            @if(request('data') || request('status') || request('barbeiro_id'))
-                <span>com os filtros aplicados</span>
-            @endif
-        </p>
-    </div>
-
-    <!-- Table Card -->
-    <div class="table-card">
-        <div class="table-wrapper">
-            <table class="appointments-table">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Serviço</th>
-                        <th>Barbeiro</th>
-                        <th>Data / Horário</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($agendamentos as $agendamento)
-                        <tr>
-                            <td>
-                                <div class="client-info">
-                                    <div class="client-avatar">
-                                        {{ substr($agendamento->nome_cliente, 0, 1) }}
-                                    </div>
-                                    <div class="client-details">
-                                        <div class="client-name">{{ $agendamento->nome_cliente }}</div>
-                                        <div class="client-phone">{{ $agendamento->telefone_cliente }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="service-tag">{{ $agendamento->servico->nome }}</span>
-                            </td>
-                            <td>
-                                <div class="barber-info">
-                                    <div class="barber-avatar">
-                                        {{ substr($agendamento->barbeiro->nome, 0, 1) }}
-                                    </div>
-                                    <div class="barber-name">{{ $agendamento->barbeiro->nome }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="datetime-info">
-                                    <div class="date-text">{{ $agendamento->data->format('d/m/Y') }}</div>
-                                    <div class="time-text">{{ $agendamento->horario->format('H:i') }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="price-value">R$ {{ number_format($agendamento->valor, 2, ',', '.') }}</div>
-                            </td>
-                            <td>
-                                <span class="status-badge status-{{ $agendamento->status }}">
-                                    @if($agendamento->status == 'agendado')
-                                        <i class="fas fa-clock"></i>
-                                    @elseif($agendamento->status == 'concluido')
-                                        <i class="fas fa-check-circle"></i>
-                                    @else
-                                        <i class="fas fa-times-circle"></i>
-                                    @endif
-                                    {{ ucfirst($agendamento->status) }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{{ route('agendamentos.edit', $agendamento) }}" class="btn-action btn-edit" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('agendamentos.destroy', $agendamento) }}" method="POST" class="inline-form" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-action btn-delete" title="Excluir">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7">
-                                <div class="empty-state">
-                                    <div class="empty-content">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                                        </svg>
-                                        <h3>Nenhum agendamento encontrado</h3>
-                                        <p>Tente ajustar os filtros ou crie um novo agendamento</p>
-                                        <a href="{{ route('agendamentos.create') }}" class="btn-primary">Criar Agendamento</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="agendado" {{ $status == 'agendado' ? 'selected' : '' }}>Agendado</option>
+                        <option value="concluido" {{ $status == 'concluido' ? 'selected' : '' }}>Concluído</option>
+                        <option value="cancelado" {{ $status == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <a href="{{ route('agendamentos.index') }}?view={{ $viewMode }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
-        
-        <!-- Paginação -->
-        @if($agendamentos->hasPages())
-            <div class="pagination-wrapper">
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-2"><div class="card text-white bg-primary"><div class="card-body"><h6>Total</h6><h3>{{ $estatisticas['total'] }}</h3></div></div></div>
+        <div class="col-md-2"><div class="card text-white bg-info"><div class="card-body"><h6>Agendados</h6><h3>{{ $estatisticas['agendados'] }}</h3></div></div></div>
+        <div class="col-md-2"><div class="card text-white bg-success"><div class="card-body"><h6>Concluídos</h6><h3>{{ $estatisticas['concluidos'] }}</h3></div></div></div>
+        <div class="col-md-2"><div class="card text-white bg-danger"><div class="card-body"><h6>Cancelados</h6><h3>{{ $estatisticas['cancelados'] }}</h3></div></div></div>
+        <div class="col-md-4"><div class="card text-white bg-warning"><div class="card-body"><h6>Faturamento do Mês</h6><h3>R$ {{ number_format($estatisticas['valor_total'], 2, ',', '.') }}</h3></div></div></div>
+    </div>
+
+    <!-- Botão de Toggle de View -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('agendamentos.index') }}?view={{ $viewMode === 'list' ? 'calendar' : 'list' }}&selected_date={{ $selectedDate->format('Y-m-d') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-exchange-alt"></i>
+            Ver como {{ $viewMode === 'list' ? 'Calendário' : 'Lista' }}
+        </a>
+    </div>
+
+    <!-- VIEW DE LISTA -->
+    @if($viewMode === 'list')
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Lista de Agendamentos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Barbeiro</th>
+                                <th>Serviço</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($agendamentos as $agendamento)
+                                <tr>
+                                    <td>{{ $agendamento->data->format('d/m/Y') }}</td>
+                                    <td>{{ $agendamento->horario }}</td>
+                                    <td>{{ $agendamento->nome_cliente }}</td>
+                                    <td>{{ $agendamento->barbeiro->nome }}</td>
+                                    <td>{{ $agendamento->servico->nome }}</td>
+                                    <td>R$ {{ number_format($agendamento->valor, 2, ',', '.') }}</td>
+                                    <td><span class="badge" style="background-color: {{ getCorPorStatus($agendamento->status) }};">{{ ucfirst($agendamento->status) }}</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('agendamentos.edit', $agendamento) }}" class="btn btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                            <form action="{{ route('agendamentos.destroy', $agendamento) }}" method="POST" onsubmit="return confirm('Tem certeza?')" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center">Nenhum agendamento encontrado.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
                 {{ $agendamentos->links() }}
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
+
+    <!-- VIEW DE CALENDÁRIO -->
+    @if($viewMode === 'calendar')
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ $data->format('F Y') }}</h5>
+                <div class="btn-group">
+                    <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $data->copy()->subMonth()->format('Y-m-d') }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-chevron-left"></i></a>
+                    <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ Carbon::today()->format('Y-m-d') }}" class="btn btn-sm btn-outline-primary">Hoje</a>
+                    <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $data->copy()->addMonth()->format('Y-m-d') }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-chevron-right"></i></a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm mb-0">
+                        <thead class="table-light"><tr><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr></thead>
+                        <tbody>
+                            @for($semana = 0; $semana < 6; $semana++)
+                                <tr>
+                                    @for($dia = 0; $dia < 7; $dia++)
+                                        <td class="p-2 align-top" style="height: 120px; width: 14.28%;">
+                                            @php
+                                                $index = ($semana * 7) + $dia;
+                                                $diaCalendario = isset($calendario[$index]) ? $calendario[$index] : null;
+                                            @endphp
+                                            @if($diaCalendario)
+                                                <div class="h-100 d-flex flex-column position-relative">
+                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                        <span class="badge @if($diaCalendario['hoje']) bg-primary @elseif($diaCalendario['fim_de_semana']) bg-secondary @else bg-light text-dark @endif">{{ $diaCalendario['dia'] }}</span>
+                                                        @if($diaCalendario['tem_agendamentos'])
+                                                            <span class="badge bg-success">{{ $diaCalendario['total'] }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="small overflow-auto">
+                                                        @foreach($diaCalendario['agendamentos']->take(2) as $ag)
+                                                            <div class="text-truncate" style="font-size: 0.7em;">
+                                                                <i class="fas fa-circle" style="color: {{ getCorPorStatus($ag->status) }}; font-size: 0.5em;"></i>
+                                                                {{ $ag->horario }} {{ $ag->nome_cliente }}
+                                                            </div>
+                                                        @endforeach
+                                                        @if($diaCalendario['total'] > 2)
+                                                            <small class="text-muted">+{{ $diaCalendario['total'] - 2 }} mais</small>
+                                                        @endif
+                                                    </div>
+                                                    <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $diaCalendario['data']->format('Y-m-d') }}" class="stretched-link"></a>
+                                                </div>
+                                            @endif
+                                        </td>
+                                    @endfor
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Agendamentos do Dia Selecionado -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Agendamentos do dia {{ $selectedDate->format('d/m/Y') }} <span class="badge bg-primary ms-2">{{ $agendamentosDia->count() }}</span></h5>
+            </div>
+            <div class="card-body">
+                @if($agendamentosDia->isNotEmpty())
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>Horário</th><th>Cliente</th><th>Barbeiro</th><th>Serviço</th><th>Status</th><th>Ações</th></tr></thead>
+                            <tbody>
+                                @foreach($agendamentosDia as $ag)
+                                    <tr>
+                                        <td>{{ $ag->horario }}</td>
+                                        <td>{{ $ag->nome_cliente }}</td>
+                                        <td>{{ $ag->barbeiro->nome }}</td>
+                                        <td>{{ $ag->servico->nome }}</td>
+                                        <td><span class="badge" style="background-color: {{ getCorPorStatus($ag->status) }};">{{ ucfirst($ag->status) }}</span></td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('agendamentos.edit', $ag) }}" class="btn btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                                <form action="{{ route('agendamentos.destroy', $ag) }}" method="POST" onsubmit="return confirm('Tem certeza?')" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-center text-muted">Nenhum agendamento para este dia.</p>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>
-
-<style>
-/* Main Container */
-.appointments-page {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-    background: #0f0f0f;
-    min-height: 100vh;
-}
-
-/* Page Header */
-.page-header {
-    margin-bottom: 2rem;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-}
-
-.header-text {
-    flex: 1;
-}
-
-.page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 0.5rem 0;
-}
-
-.page-subtitle {
-    font-size: 0.95rem;
-    color: #9ca3af;
-    margin: 0;
-}
-
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 0.75rem;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-}
-
-/* Filters Card */
-.filters-card {
-    background: #1a1a1a;
-    border-radius: 1rem;
-    padding: 1.75rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #2a2a2a;
-}
-
-.filters-header {
-    margin-bottom: 1.5rem;
-}
-
-.filters-title {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin: 0;
-}
-
-.filters-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.filters-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.25rem;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.form-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #d1d5db;
-}
-
-.form-input,
-.form-select {
-    padding: 0.75rem 1rem;
-    background: #0f0f0f;
-    border: 1px solid #2a2a2a;
-    border-radius: 0.625rem;
-    color: #ffffff;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-}
-
-.form-input:focus,
-.form-select:focus {
-    outline: none;
-    border-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-}
-
-.form-select {
-    cursor: pointer;
-}
-
-.filters-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding-top: 0.5rem;
-}
-
-.btn-filter,
-.btn-clear {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    border-radius: 0.625rem;
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.btn-filter {
-    background: #f59e0b;
-    color: #ffffff;
-    border: none;
-}
-
-.btn-filter:hover {
-    background: #d97706;
-}
-
-.btn-clear {
-    background: transparent;
-    color: #9ca3af;
-    border: 1px solid #2a2a2a;
-}
-
-.btn-clear:hover {
-    background: #1a1a1a;
-    color: #ffffff;
-    border-color: #3a3a3a;
-}
-
-/* Results Summary */
-.results-summary {
-    margin-bottom: 1rem;
-}
-
-.results-text {
-    font-size: 0.875rem;
-    color: #9ca3af;
-    margin: 0;
-}
-
-.results-text strong {
-    color: #f59e0b;
-    font-weight: 600;
-}
-
-/* Table Card */
-.table-card {
-    background: #1a1a1a;
-    border-radius: 1rem;
-    border: 1px solid #2a2a2a;
-    overflow: hidden;
-}
-
-.table-wrapper {
-    overflow-x: auto;
-}
-
-.appointments-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.appointments-table thead {
-    background: #0f0f0f;
-    border-bottom: 1px solid #2a2a2a;
-}
-
-.appointments-table th {
-    padding: 1rem 1.25rem;
-    text-align: left;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-}
-
-.appointments-table tbody tr {
-    border-bottom: 1px solid #2a2a2a;
-    transition: background 0.2s ease;
-}
-
-.appointments-table tbody tr:hover {
-    background: #1f1f1f;
-}
-
-.appointments-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.appointments-table td {
-    padding: 1.25rem 1.25rem;
-    font-size: 0.9rem;
-    color: #e5e7eb;
-}
-
-/* Client Info */
-.client-info {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-}
-
-.client-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1rem;
-    color: #ffffff;
-    flex-shrink: 0;
-}
-
-.client-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.client-name {
-    font-weight: 600;
-    color: #ffffff;
-    font-size: 0.95rem;
-}
-
-.client-phone {
-    font-size: 0.8125rem;
-    color: #9ca3af;
-}
-
-/* Service Tag */
-.service-tag {
-    display: inline-block;
-    padding: 0.375rem 0.875rem;
-    background: #2a2a2a;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    color: #f59e0b;
-    font-weight: 500;
-}
-
-/* Barber Info */
-.barber-info {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
-.barber-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #2a2a2a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #9ca3af;
-    flex-shrink: 0;
-}
-
-.barber-name {
-    color: #e5e7eb;
-    font-size: 0.9rem;
-}
-
-/* DateTime Info */
-.datetime-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.date-text {
-    font-weight: 500;
-    color: #ffffff;
-    font-size: 0.9rem;
-}
-
-.time-text {
-    font-size: 0.8125rem;
-    color: #9ca3af;
-}
-
-/* Price Value */
-.price-value {
-    font-weight: 600;
-    color: #10b981;
-    font-size: 0.95rem;
-}
-
-/* Status Badge */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-
-.status-agendado {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-}
-
-.status-concluido {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-}
-
-.status-cancelado {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.inline-form {
-    display: inline;
-}
-
-.btn-action {
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.5rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: transparent;
-    padding: 0;
-}
-
-.btn-edit {
-    color: #60a5fa;
-}
-
-.btn-edit:hover {
-    background: rgba(59, 130, 246, 0.15);
-}
-
-.btn-delete {
-    color: #f87171;
-}
-
-.btn-delete:hover {
-    background: rgba(239, 68, 68, 0.15);
-}
-
-/* Empty State */
-.empty-state {
-    padding: 4rem 2rem !important;
-}
-
-.empty-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    text-align: center;
-}
-
-.empty-content svg {
-    color: #4b5563;
-}
-
-.empty-content h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #9ca3af;
-    margin: 0;
-}
-
-.empty-content p {
-    font-size: 0.95rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-/* Pagination */
-.pagination-wrapper {
-    padding: 1.5rem 1.25rem;
-    border-top: 1px solid #2a2a2a;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-    .filters-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .appointments-page {
-        padding: 1rem;
-    }
-
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .btn-primary {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .filters-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .filters-actions {
-        flex-direction: column;
-    }
-
-    .btn-filter,
-    .btn-clear {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .page-title {
-        font-size: 1.5rem;
-    }
-
-    /* Hide less important columns on mobile */
-    .appointments-table th:nth-child(2),
-    .appointments-table td:nth-child(2),
-    .appointments-table th:nth-child(3),
-    .appointments-table td:nth-child(3) {
-        display: none;
-    }
-
-    .appointments-table th,
-    .appointments-table td {
-        padding: 1rem 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    .client-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 0.875rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .datetime-info {
-        font-size: 0.8125rem;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-    }
-}
-</style>
 @endsection
