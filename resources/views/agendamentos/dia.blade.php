@@ -1,123 +1,73 @@
 @extends('layouts.app')
 
-@section('title', 'Agenda do Dia')
-
 @section('content')
-<div class="day-page">
-    <!-- Header da Página do Dia -->
-    <div class="day-header-actions">
-        <h1 class="page-title">
-            <i class="fas fa-calendar-day"></i>
-            Agenda do Dia
-        </h1>
-        <div class="header-spacer"></div>
-        <a href="{{ route('agenda.index') }}" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            Voltar para o Calendário
-        </a>
-    </div>
-
-    <!-- Informações do Dia -->
-    <div class="day-info-card">
-        <h2>{{ $data->format('d \d\e F \d\e Y') }}</h2>
-        <p class="day-subtitle">{{ $data->format('l') }}</p>
-    </div>
-
-    <!-- Lista de Agendamentos do Dia -->
-    <div class="day-appointments-list">
-        <div class="day-header">
-            <h3>
-                <i class="fas fa-clock"></i>
-                Agendamentos
-            </h3>
-            <span class="appointment-count-badge">
-                {{ $agendamentos->count() }} agendamento(s)
-            </span>
-        </div>
-        
-        @if($agendamentos->isNotEmpty())
-        <div class="appointments-timeline">
-            @foreach($agendamentos as $agendamento)
-            <div class="appointment-item status-{{ $agendamento->status }}">
-                <div class="appointment-time">
-                    <span class="time">{{ \Carbon\Carbon::parse($agendamento->horario)->format('H:i') }}</span>
-                </div>
-                <div class="appointment-content">
-                    <div class="appointment-header">
-                        <h4>{{ $agendamento->nome_cliente }}</h4>
-                        <span class="status-badge status-{{ $agendamento->status }}">
-                            {{ ucfirst($agendamento->status) }}
-                        </span>
-                    </div>
-                    <div class="appointment-details">
-                        <div class="detail-item">
-                            <i class="fas fa-cut"></i>
-                            {{ $agendamento->servico->nome ?? 'Serviço não encontrado' }}
-                        </div>
-                        <div class="detail-item">
-                            <i class="fas fa-user"></i>
-                            {{ $agendamento->barbeiro->nome ?? 'Barbeiro não encontrado' }}
-                        </div>
-                        <div class="detail-item">
-                            <i class="fas fa-dollar-sign"></i>
-                            R$ {{ number_format($agendamento->valor, 2, ',', '.') }}
-                        </div>
-                    </div>
-                    <div class="appointment-actions">
-                        <a href="{{ route('agendamentos.edit', $agendamento->id) }}" 
-                           class="btn-action btn-edit" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <button onclick="confirmarApagar({{ $agendamento->id }}, '{{ $agendamento->nome_cliente }}')"
-                                class="btn-action btn-delete" title="Apagar">
-                            <i class="fas fa-eye-slash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-        @else
-        <div class="empty-day">
-            <i class="fas fa-calendar-times"></i>
-            <p>Nenhum agendamento para este dia.</p>
-            <a href="{{ route('agendamentos.create') }}?data={{ $data->format('Y-m-d') }}" 
-               class="btn-primary">
-                <i class="fas fa-plus"></i>
-                Agendar para este dia
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Agendamentos - {{ $data->format('d/m/Y') }}</h1>
+        <div>
+            <a href="{{ route('agenda') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar para a Agenda
+            </a>
+            <a href="{{ route('agendamentos.create') }}?data={{ $data->format('Y-m-d') }}" class="btn btn-primary ms-2">
+                <i class="fas fa-plus"></i> Novo Agendamento
             </a>
         </div>
-        @endif
     </div>
-</div>
 
-<!-- Modal de Soft Delete -->
-<div class="modal-overlay" id="softDeleteModal" style="display: none;">
-    <div class="modal-box">
-        <div class="modal-icon">
-            <i class="fas fa-eye-slash"></i>
+    <div class="card">
+        <div class="card-body">
+            @if($agendamentos->isNotEmpty())
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Barbeiro</th>
+                                <th>Serviço</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($agendamentos as $ag)
+                                <tr>
+                                    <td>{{ $ag->horario }}</td>
+                                    <td>{{ $ag->nome_cliente }}</td>
+                                    <td>{{ $ag->barbeiro->nome }}</td>
+                                    <td>{{ $ag->servico->nome }}</td>
+                                    <td><span class="badge" style="background-color: {{ getCorPorStatus($ag->status) }};">{{ ucfirst($ag->status) }}</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('agendamentos.edit', $ag) }}" class="btn btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="confirmarApagar({{ $ag->id }}, '{{ $ag->nome_cliente }}')" class="btn btn-outline-danger" title="Apagar">
+                                                <i class="fas fa-eye-slash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum agendamento para este dia.</h5>
+                    <p class="text-muted">Que tal criar um novo?</p>
+                    <a href="{{ route('agendamentos.create') }}?data={{ $data->format('Y-m-d') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Criar Agendamento
+                    </a>
+                </div>
+            @endif
         </div>
-        <h3>Confirmar Apagar</h3>
-        <p>Tem certeza que deseja apagar o agendamento de <strong id="clientName"></strong>?</p>
-        <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
-            O agendamento será ocultado da agenda, mas permanecerá no sistema para histórico.
-        </p>
-        
-        <form id="softDeleteForm" method="POST" style="margin-top: 1.5rem;">
-            @csrf
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="fecharModal()">
-                    <i class="fas fa-times"></i>
-                    Cancelar
-                </button>
-                <button type="submit" class="btn-confirm">
-                    <i class="fas fa-eye-slash"></i>
-                    Apagar
-                </button>
-            </div>
-        </form>
     </div>
 </div>
+@endsection
+
+
 
 
     <style>
@@ -454,72 +404,40 @@
     }
     </style>
 
-    <script>
-    // Variável global para o ID do agendamento
-    let agendamentoIdParaApagar = null;
+@push('scripts')
+<script>
+// Função para confirmar o apagamento (soft delete)
+function confirmarApagar(id, nomeCliente) {
+    document.getElementById('clientName').textContent = nomeCliente;
+    
+    const form = document.getElementById('softDeleteForm');
+    form.action = `/agendamentos/${id}/apagar`;
+    
+    const modal = document.getElementById('softDeleteModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
 
-    // Função para confirmar o apagamento (soft delete)
-    function confirmarApagar(id, nomeCliente) {
-        agendamentoIdParaApagar = id;
-        document.getElementById('clientName').textContent = nomeCliente;
-        
-        const form = document.getElementById('softDeleteForm');
-        form.action = `/agendamentos/${id}/apagar`;
-        
-        const modal = document.getElementById('softDeleteModal');
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+// Submeter o formulário de soft delete
+const softDeleteForm = document.getElementById('softDeleteForm');
+softDeleteForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = this.action;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
     }
-
-    // Função para fechar o modal
-    function fecharModal() {
-        const modal = document.getElementById('softDeleteModal');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        agendamentoIdParaApagar = null;
-    }
-
-    // Event Listeners para o modal
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('softDeleteModal');
-        
-        // Fechar modal ao clicar no fundo
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                fecharModal();
-            }
-        });
-        
-        // Fechar modal com a tecla ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                fecharModal();
-            }
-        });
-        
-        // Submeter o formulário de soft delete
-        const softDeleteForm = document.getElementById('softDeleteForm');
-        softDeleteForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Cria um formulário dinâmico para submissão
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = this.action;
-            
-            // Adiciona o token CSRF
-            const csrfToken = document.querySelector('meta[name="csrf-token"]');
-            if (csrfToken) {
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrfToken.getAttribute('content');
-                form.appendChild(csrfInput);
-            }
-            
-            document.body.appendChild(form);
-            form.submit();
-        });
-    });
-    </script>
-@endsection
+    
+    document.body.appendChild(form);
+    form.submit();
+});
+</script>
+@endpush

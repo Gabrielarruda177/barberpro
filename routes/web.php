@@ -11,37 +11,66 @@ use App\Http\Controllers\AgendaController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
+|
+| Aqui é onde você pode registrar as rotas web para sua aplicação. Elas
+| são carregadas pelo RouteServiceProvider dentro de um grupo que
+| contém o middleware "web". Ai gogo!
+|
 */
 
-// Dashboard
+// --------------------------------------------------
+// ROTA PRINCIPAL (DASHBOARD)
+// --------------------------------------------------
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// Rotas de Agendamentos
+
+// --------------------------------------------------
+// ROTAS DE AGENDAMENTOS (COM SOFT DELETE)
+// --------------------------------------------------
 Route::prefix('agendamentos')->name('agendamentos.')->group(function () {
+    // Listagem e Formulários
     Route::get('/', [AgendamentoController::class, 'index'])->name('index');
     Route::get('/create', [AgendamentoController::class, 'create'])->name('create');
-    Route::post('/', [AgendamentoController::class, 'store'])->name('store');
     Route::get('/{agendamento}/edit', [AgendamentoController::class, 'edit'])->name('edit');
+    
+    // Ações (CRUD)
+    Route::post('/', [AgendamentoController::class, 'store'])->name('store');
     Route::put('/{agendamento}', [AgendamentoController::class, 'update'])->name('update');
+    
+    // Exclusão Permanente (Método destroy para compatibilidade)
+    // NOTA: O ideal é usar apenas soft delete, mas a rota é mantida se o método existir.
     Route::delete('/{agendamento}', [AgendamentoController::class, 'destroy'])->name('destroy');
     
-    
-    // Soft Delete
+    // --- ROTAS DE SOFT DELETE ---
+    // Rota para "apagar" (enviar para a lixeira)
     Route::post('/{agendamento}/apagar', [AgendamentoController::class, 'softDelete'])->name('softDelete');
-    Route::post('/{id}/restaurar', [AgendamentoController::class, 'restore'])->name('restore');
-    Route::delete('/{id}/deletar', [AgendamentoController::class, 'forceDelete'])->name('forceDelete');
+    
+    // Rota para visualizar a lixeira
     Route::get('/lixeira', [AgendamentoController::class, 'lixeira'])->name('lixeira');
     
-    // API
+    // Rota para restaurar da lixeira
+    // MELHORIA: Usar {agendamento} para consistência e Route Model Binding.
+    Route::post('/{agendamento}/restaurar', [AgendamentoController::class, 'restore'])->name('restore');
+    
+    // Rota para excluir permanentemente da lixeira
+    // MELHORIA: Usar {agendamento} para consistência.
+    Route::delete('/{agendamento}/deletar', [AgendamentoController::class, 'forceDelete'])->name('forceDelete');
+
+    // API para buscar horários disponíveis (usada via AJAX/JavaScript)
     Route::get('/horarios-disponiveis', [AgendamentoController::class, 'horariosDisponiveis'])->name('horarios');
 });
 
-// Rotas de Barbeiros
-Route::resource('barbeiros', BarbeiroController::class);
 
-// Rotas de Serviços
+// --------------------------------------------------
+// ROTAS DE RECURSOS (BARBEIROS E SERVIÇOS)
+// --------------------------------------------------
+// Route::resource cria automaticamente as rotas para index, create, store, show, edit, update, destroy
+Route::resource('barbeiros', BarbeiroController::class);
 Route::resource('servicos', ServicoController::class);
 
-// Agenda
+
+// --------------------------------------------------
+// ROTAS DA AGENDA (VISÃO GERAL)
+// --------------------------------------------------
 Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
 Route::get('/agenda/dia/{data}', [AgendaController::class, 'dia'])->name('agenda.dia');

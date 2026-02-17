@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- NOVO: Essencial para o AJAX/JS --}}
     <title>BarberPro - Sistema de Gestão</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -75,16 +76,67 @@
         </main>
     </div>
 
-    <!-- Modals -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title"></h2>
-                <button class="modal-close" id="modal-close">&times;</button>
+    {{-- INÍCIO DAS NOVAS ADIÇÕES --}}
+
+    <!-- Modal de Soft Delete (Centralizado no Layout) -->
+    <div class="modal-overlay" id="softDeleteModal" style="display: none;">
+        <div class="modal-box" style="background: #2d2d2d; border: 1px solid #404040; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; text-align: center; color: #f0f0f0;">
+            <div class="modal-icon" style="font-size: 3rem; color: #f87171; margin-bottom: 1rem;">
+                <i class="fas fa-eye-slash"></i>
             </div>
-            <div id="modal-body"></div>
+            <h3>Confirmar Apagar</h3>
+            <p>Tem certeza que deseja apagar o agendamento de <strong id="clientName"></strong>?</p>
+            <p style="font-size: 0.85rem; color: #a0a0a0; margin-top: 0.5rem;">
+                O agendamento será ocultado da agenda, mas permanecerá no sistema para histórico.
+            </p>
+            
+            <form id="softDeleteForm" method="POST" style="margin-top: 1.5rem;">
+                @csrf
+                <div class="modal-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                    <button type="button" class="btn-cancel" onclick="fecharModal()" style="padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: 1px solid #404040; background: #1a1a1a; color: #a0a0a0;">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-confirm" style="padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; background: #ef4444; color: white;">
+                        <i class="fas fa-eye-slash"></i>
+                        Apagar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- Script para o Modal (Centralizado no Layout) -->
+    <script>
+        // Função para fechar o modal (acessível globalmente)
+        function fecharModal() {
+            const modal = document.getElementById('softDeleteModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Event Listeners para o modal (executados uma única vez)
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('softDeleteModal');
+            
+            // Fechar modal ao clicar no fundo
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    fecharModal();
+                }
+            });
+            
+            // Fechar modal com a tecla ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    fecharModal();
+                }
+            });
+        });
+    </script>
+
+    <!-- Stack para scripts adicionais das páginas -->
+    @stack('scripts')
 
     <script src="{{ asset('js/app.js') }}"></script>
 </body>

@@ -10,46 +10,68 @@ use Carbon\CarbonPeriod;
 
 class AgendaController extends Controller
 {
+    /**
+     * Display a listing of the resource (agenda).
+     */
     public function index(Request $request)
     {
-        // Obter data do request ou usar hoje
-        $data = $request->get('data') ? Carbon::parse($request->get('data')) : Carbon::today();
-        
+        $data = $request->get('data', Carbon::today());
+        $data = Carbon::parse($data);
+        $barbeiroId = $request->get('barbeiro_id');
+        $status = $request->get('status');
+
+        // Query base para agendamentos do mês
+        $query = Agendamento::whereMonth('data', $data->month)
+                              ->whereYear('data', $data->year)
+                              ->with(['barbeiro', 'servico']);
+
         // Aplicar filtros
-        $query = Agendamento::with(['barbeiro', 'servico'])
-                          ->whereMonth('data', $data->month)
-                          ->whereYear('data', $data->year)
-                          ->whereNull('deleted_at');
-
-        if ($request->filled('barbeiro_id')) {
-            $query->where('barbeiro_id', $request->barbeiro_id);
+        if ($barbeiroId) {
+            $query->where('barbeiro_id', $barbeiroId);
         }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($status) {
+            $query->where('status', $status);
         }
 
-        $agendamentos = $query->get()
-                            ->groupBy(function($item) {
-                                return $item->data->format('Y-m-d');
-                            });
+        $agendamentos = $query->orderBy('data')->orderBy('horario')->get();
         
-        $agendamentosDia = $agendamentos->get($data->format('Y-m-d'), collect());
+        // Preparar dados para o calendário
+        $calendario = [];
+        $startOfMonth = $data->copy()->startOfMonth()->startOfWeek(Carbon::SUNDAY);
+        $endOfMonth = $data->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
         
-        // Gerar calendário do mês
-        $calendario = $this->gerarCalendarioMensal($data, $agendamentos);
+        $period = CarbonPeriod::create($startOfMonth, $endOfMonth);
+        
+        foreach ($period as $date) {
+            $agendamentosDoDia = $agendamentos->where('data', $date->format('Y-m-d'));
+            
+            $calendario[] = [
+                'data' => $date,
+                'dia' => $date->day,
+                'hoje' => $date->isToday(),
+                'fim_de_semana' => $date->isWeekend(),
+                'tem_agendamentos' => $agendamentosDoDia->isNotEmpty(),
+                'total' => $agendamentosDoDia->count(),
+                'agendamentos' => $agendamentosDoDia,
+            ];
+        }
+
+        // Obter agendamentos do dia selecionado para a lista abaixo do calendário
+        $agendamentosDoDia = $agendamentos->where('data', $data->format('Y-m-d'))->values();
         
         // Calcular estatísticas
-        $estatisticas = $this->calcularEstatisticas($agendamentos);
+        $stats = $this->calcularEstatisticas($agendamentos);
         
         // Obter barbeiros para filtros
         $barbeiros = Barbeiro::orderBy('nome')->get();
         
-        return view('agenda', compact(
+        // CORREÇÃO AQUI: Adicionar 'agendamento.' antes do nome da view
+        return view('agendamentos.agenda', compact(
             'data', 
             'agendamentos', 
-            'agendamentosDia',
+            'agendamentosDoDia', 
             'calendario',
-            'estatisticas',
+            'stats', 
             'barbeiros'
         ));
     }
@@ -61,89 +83,26 @@ class AgendaController extends Controller
     {
         $data = Carbon::parse($data);
         
-        $agendamentos = Agendamento::with(['barbeiro', 'servico'])
-                                  ->whereDate('data', $data)
-                                  ->whereNull('deleted_at')
-                                  ->orderBy('horario')
-                                  ->get();
-
-        return view('agenda.dia', compact('data', 'agendamentos'));
-    }
-
-
-    
-    /**
-     * Gera o calendário mensal
-     */
-    private function gerarCalendarioMensal($data, $agendamentos)
-    {
-        $primeiroDia = $data->copy()->startOfMonth();
-        $ultimoDia = $data->copy()->endOfMonth();
+        $agendamentos = Agendamento::whereDate('data', $data)
+                                   ->with(['barbeiro', 'servico'])
+                                   ->orderBy('horario')
+                                   ->get();
         
-        // Adicionar dias vazios no início se necessário
-        $calendario = [];
-        $diaSemana = $primeiroDia->dayOfWeek;
-        
-        // Dias vazios antes do mês
-        for ($i = 0; $i < $diaSemana; $i++) {
-            $calendario[] = null;
-        }
-        
-        // Dias do mês
-        $periodo = CarbonPeriod::create($primeiroDia, $ultimoDia);
-        
-        foreach ($periodo as $dia) {
-            $agendamentosDoDia = $agendamentos->get($dia->format('Y-m-d'), collect());  
-            
-            $calendario[] = [
-                'data' => $dia,
-                'dia' => $dia->day,
-                'hoje' => $dia->isToday(),
-                'fim_de_semana' => $dia->isWeekend(),
-                'passado' => $dia->isPast(),
-                'agendamentos' => $agendamentosDoDia,
-                'total' => $agendamentosDoDia->count(),
-                'tem_agendamentos' => $agendamentosDoDia->isNotEmpty(),
-                'cor_status' => $this->getCorDoDia($agendamentosDoDia)
-            ];
-        }
-        
-        return $calendario;
+        // CORREÇÃO AQUI TAMBÉM
+        return view('agendamento.dia', compact('agendamentos', 'data'));
     }
 
     /**
-     * Calcula estatísticas do mês
+     * Calcula estatísticas para a agenda
      */
     private function calcularEstatisticas($agendamentos)
     {
-        $todos = $agendamentos->flatten();
-        
         return [
-            'total' => $todos->count(),
-            'concluidos' => $todos->where('status', 'concluido')->count(),
-            'cancelados' => $todos->where('status', 'cancelado')->count(),
-            'agendados' => $todos->where('status', 'agendado')->count(),
-            'valor_total' => $todos->sum('valor'),
-            'valor_medio' => $todos->avg('valor')
+            'total' => $agendamentos->count(),
+            'agendados' => $agendamentos->where('status', 'agendado')->count(),
+            'concluidos' => $agendamentos->where('status', 'concluido')->count(),
+            'cancelados' => $agendamentos->where('status', 'cancelado')->count(),
+            'valor_total' => $agendamentos->where('status', 'concluido')->sum('valor'),
         ];
-    }
-
-    /**
-     * Retorna a cor do dia baseada no status do último agendamento
-     */
-    private function getCorDoDia($agendamentos)
-    {
-        if ($agendamentos->isEmpty()) {
-            return 'transparent';
-        }
-
-        $status = $agendamentos->last()->status;
-        $cores = [
-            'agendado' => '#3b82f6',
-            'concluido' => '#10b981',
-            'cancelado' => '#ef4444'
-        ];
-
-        return $cores[$status] ?? '#6b7280';
     }
 }
