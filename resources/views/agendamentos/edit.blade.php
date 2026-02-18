@@ -41,7 +41,7 @@
 
     <!-- Form Container -->
     <div class="form-container">
-        <form action="{{ route('agendamentos.update', $agendamento) }}" method="POST" id="editForm">
+        <form action="{{ route('agendamentos.edit', $agendamento) }}" method="POST" id="editForm">
             @csrf
             @method('PUT')
 

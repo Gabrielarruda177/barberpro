@@ -14,14 +14,21 @@ class Barbeiro extends Model
         'telefone',
         'especialidades',
         'inicio_trabalho',
-        'fim_trabalho'
+        'fim_trabalho',
+        'ativo'
     ];
     
     protected $casts = [
         'inicio_trabalho' => 'datetime:H:i',
-        'fim_trabalho' => 'datetime:H:i'
+        'fim_trabalho' => 'datetime:H:i',
+        'ativo' => 'boolean'
     ];
     
+    public function scopeActive($query)
+    {
+        return $query->where('ativo', true);
+    }
+
     public function agendamentos()
     {
         return $this->hasMany(Agendamento::class);

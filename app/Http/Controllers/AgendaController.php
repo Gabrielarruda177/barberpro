@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -10,32 +9,28 @@ use Carbon\CarbonPeriod;
 
 class AgendaController extends Controller
 {
-    /**
-     * Display a listing of the resource (agenda).
-     */
     public function index(Request $request)
     {
         $data = $request->get('data', Carbon::today());
         $data = Carbon::parse($data);
+        
         $barbeiroId = $request->get('barbeiro_id');
         $status = $request->get('status');
 
-        // Query base para agendamentos do mês
         $query = Agendamento::whereMonth('data', $data->month)
-                              ->whereYear('data', $data->year)
-                              ->with(['barbeiro', 'servico']);
+                            ->whereYear('data', $data->year)
+                            ->with(['barbeiro', 'servico']);
 
-        // Aplicar filtros
         if ($barbeiroId) {
             $query->where('barbeiro_id', $barbeiroId);
         }
+        
         if ($status) {
             $query->where('status', $status);
         }
 
         $agendamentos = $query->orderBy('data')->orderBy('horario')->get();
         
-        // Preparar dados para o calendário
         $calendario = [];
         $startOfMonth = $data->copy()->startOfMonth()->startOfWeek(Carbon::SUNDAY);
         $endOfMonth = $data->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
@@ -56,45 +51,42 @@ class AgendaController extends Controller
             ];
         }
 
-        // Obter agendamentos do dia selecionado para a lista abaixo do calendário
         $agendamentosDoDia = $agendamentos->where('data', $data->format('Y-m-d'))->values();
-        
-        // Calcular estatísticas
         $stats = $this->calcularEstatisticas($agendamentos);
-        
-        // Obter barbeiros para filtros
         $barbeiros = Barbeiro::orderBy('nome')->get();
         
-        // CORREÇÃO AQUI: Adicionar 'agendamento.' antes do nome da view
         return view('agendamentos.agenda', compact(
-            'data', 
-            'agendamentos', 
-            'agendamentosDoDia', 
-            'calendario',
-            'stats', 
-            'barbeiros'
+            'data', 'agendamentos', 'agendamentosDoDia', 
+            'calendario', 'stats', 'barbeiros'
         ));
     }
 
-    /**
-     * Visualização de um dia específico
-     */
+    // NOVO: Método AJAX para modal
+    public function agendamentosDiaAjax(Request $request, $data)
+    {
+        $data = Carbon::parse($data);
+        $agendamentos = Agendamento::whereDate('data', $data)
+                                  ->with(['barbeiro', 'servico'])
+                                  ->orderBy('horario')
+                                  ->get();
+        
+        return response()->json([
+            'data' => $data->translatedFormat('d \d\e F \d\e Y'),
+            'total' => $agendamentos->count(),
+            'agendamentos' => $agendamentos
+        ]);
+    }
+
     public function dia($data)
     {
         $data = Carbon::parse($data);
-        
         $agendamentos = Agendamento::whereDate('data', $data)
-                                   ->with(['barbeiro', 'servico'])
-                                   ->orderBy('horario')
-                                   ->get();
-        
-        // CORREÇÃO AQUI TAMBÉM
-        return view('agendamento.dia', compact('agendamentos', 'data'));
+                                  ->with(['barbeiro', 'servico'])
+                                  ->orderBy('horario')
+                                  ->get();
+        return view('agendamentos.dia', compact('agendamentos', 'data'));
     }
 
-    /**
-     * Calcula estatísticas para a agenda
-     */
     private function calcularEstatisticas($agendamentos)
     {
         return [

@@ -48,6 +48,11 @@ class ServicoController extends Controller
         
         return redirect()->route('servicos.index')->with('success', 'Serviço excluído com sucesso!');
     }
+
+        public function getJson(Servico $servico)
+    {
+        return response()->json($servico);
+    }
     
     public function toggleStatus(Servico $servico)
     {

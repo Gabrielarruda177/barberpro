@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- NOVO: Essencial para o AJAX/JS --}}
-    <title>BarberPro - Sistema de Gestão</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>BarberPro - @yield('title', 'Sistema de Gestão')</title>
+
+    <!-- CSS Principal (Laravel Mix/Vite) -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts (necessário para a página de barbeiros) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- 
+        ✅ A LINHA QUE ESTAVA FALTANDO!
+        Esta diretiva insere o CSS da página (ex: da página de barbeiros) aqui.
+    -->
+    @yield('styles')
+
 </head>
 <body>
     <div class="app-container">
@@ -36,7 +52,6 @@
                         <span>Agendamentos</span>
                     </a>
                 </li>
-              
                 <li>
                     <a href="{{ route('barbeiros.index') }}" class="nav-item {{ request()->routeIs('barbeiros.*') ? 'active' : '' }}">
                         <i class="fas fa-user-tie"></i>
@@ -76,9 +91,7 @@
         </main>
     </div>
 
-    {{-- INÍCIO DAS NOVAS ADIÇÕES --}}
-
-    <!-- Modal de Soft Delete (Centralizado no Layout) -->
+    <!-- Modal de Soft Delete (mantive sua lógica) -->
     <div class="modal-overlay" id="softDeleteModal" style="display: none;">
         <div class="modal-box" style="background: #2d2d2d; border: 1px solid #404040; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; text-align: center; color: #f0f0f0;">
             <div class="modal-icon" style="font-size: 3rem; color: #f87171; margin-bottom: 1rem;">
@@ -106,38 +119,23 @@
         </div>
     </div>
 
-    <!-- Script para o Modal (Centralizado no Layout) -->
+    <!-- Stack para scripts adicionais das páginas -->
+    @stack('scripts')
+
+    <script src="{{ asset('js/app.js') }}"></script>
+
+    <!-- Script para o Modal (mantido, pois é global) -->
     <script>
-        // Função para fechar o modal (acessível globalmente)
         function fecharModal() {
             const modal = document.getElementById('softDeleteModal');
             modal.style.display = 'none';
             document.body.style.overflow = '';
         }
-
-        // Event Listeners para o modal (executados uma única vez)
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('softDeleteModal');
-            
-            // Fechar modal ao clicar no fundo
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    fecharModal();
-                }
-            });
-            
-            // Fechar modal com a tecla ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modal.style.display === 'flex') {
-                    fecharModal();
-                }
-            });
+            modal.addEventListener('click', function(e) { if (e.target === modal) fecharModal(); });
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display === 'flex') fecharModal(); });
         });
     </script>
-
-    <!-- Stack para scripts adicionais das páginas -->
-    @stack('scripts')
-
-    <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

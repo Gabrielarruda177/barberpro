@@ -25,7 +25,7 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 
 // --------------------------------------------------
-// ROTAS DE AGENDAMENTOS (COM SOFT DELETE)
+// ROTAS DE AGENDAMENTOS (COM SOFT DELETE PADRONIZADO)
 // --------------------------------------------------
 Route::prefix('agendamentos')->name('agendamentos.')->group(function () {
     // Listagem e Formulários
@@ -35,25 +35,21 @@ Route::prefix('agendamentos')->name('agendamentos.')->group(function () {
     
     // Ações (CRUD)
     Route::post('/', [AgendamentoController::class, 'store'])->name('store');
-    Route::put('/{agendamento}', [AgendamentoController::class, 'update'])->name('update');
     
-    // Exclusão Permanente (Método destroy para compatibilidade)
-    // NOTA: O ideal é usar apenas soft delete, mas a rota é mantida se o método existir.
+    // --- MUDANÇA PRINCIPAL ---
+    // A rota DELETE padrão agora será responsável pelo Soft Delete.
+    // O método no controller deve ser `destroy()` e deve chamar `$agendamento->delete();`.
     Route::delete('/{agendamento}', [AgendamentoController::class, 'destroy'])->name('destroy');
     
-    // --- ROTAS DE SOFT DELETE ---
-    // Rota para "apagar" (enviar para a lixeira)
-    Route::post('/{agendamento}/apagar', [AgendamentoController::class, 'softDelete'])->name('softDelete');
-    
+    // --- ROTAS DA LIXEIRA (MANTIDAS) ---
     // Rota para visualizar a lixeira
     Route::get('/lixeira', [AgendamentoController::class, 'lixeira'])->name('lixeira');
     
     // Rota para restaurar da lixeira
-    // MELHORIA: Usar {agendamento} para consistência e Route Model Binding.
     Route::post('/{agendamento}/restaurar', [AgendamentoController::class, 'restore'])->name('restore');
     
     // Rota para excluir permanentemente da lixeira
-    // MELHORIA: Usar {agendamento} para consistência.
+    // O método no controller deve ser `forceDelete()` e deve chamar `$agendamento->forceDelete();`.
     Route::delete('/{agendamento}/deletar', [AgendamentoController::class, 'forceDelete'])->name('forceDelete');
 
     // API para buscar horários disponíveis (usada via AJAX/JavaScript)
@@ -62,11 +58,41 @@ Route::prefix('agendamentos')->name('agendamentos.')->group(function () {
 
 
 // --------------------------------------------------
-// ROTAS DE RECURSOS (BARBEIROS E SERVIÇOS)
+// ROTAS DE BARBEIROS
 // --------------------------------------------------
-// Route::resource cria automaticamente as rotas para index, create, store, show, edit, update, destroy
-Route::resource('barbeiros', BarbeiroController::class);
-Route::resource('servicos', ServicoController::class);
+Route::prefix('barbeiros')->name('barbeiros.')->group(function () {
+    // Rotas do Resource Controller (CRUD)
+    Route::get('/', [BarbeiroController::class, 'index'])->name('index');
+    Route::post('/', [BarbeiroController::class, 'store'])->name('store');
+    Route::get('/{barbeiro}/edit', [BarbeiroController::class, 'edit'])->name('edit');
+    Route::put('/{barbeiro}', [BarbeiroController::class, 'update'])->name('update');
+    Route::delete('/{barbeiro}', [BarbeiroController::class, 'destroy'])->name('destroy');
+
+    // Rota para buscar os dados de um barbeiro em JSON (para o modal de edição)
+    Route::get('/{barbeiro}/json', [BarbeiroController::class, 'getJson'])->name('json');
+
+    // Rota para alternar o status (ativo/inativo) do barbeiro
+    Route::patch('/{barbeiro}/toggle-status', [BarbeiroController::class, 'toggleStatus'])->name('toggle-status');
+});
+
+
+// --------------------------------------------------
+// ROTAS DE SERVIÇOS
+// --------------------------------------------------
+Route::prefix('servicos')->name('servicos.')->group(function () {
+    // Rotas do Resource Controller (CRUD)
+    Route::get('/', [ServicoController::class, 'index'])->name('index');
+    Route::post('/', [ServicoController::class, 'store'])->name('store');
+    Route::get('/{servico}/edit', [ServicoController::class, 'edit'])->name('edit');
+    Route::put('/{servico}', [ServicoController::class, 'update'])->name('update');
+    Route::delete('/{servico}', [ServicoController::class, 'destroy'])->name('destroy');
+
+    // Rota para buscar os dados de um serviço em JSON (para o modal de edição)
+    Route::get('/{servico}/json', [ServicoController::class, 'getJson'])->name('json');
+
+    // Rota para alternar o status (ativo/inativo) do serviço
+    Route::patch('/{servico}/toggle-status', [ServicoController::class, 'toggleStatus'])->name('toggle-status');
+});
 
 
 // --------------------------------------------------

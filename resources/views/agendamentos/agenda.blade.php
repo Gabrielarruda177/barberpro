@@ -200,7 +200,7 @@
             <i class="fas fa-calendar-alt"></i>
             Agenda do Mês
         </h1>
-        <a href="{{ route('agendamentos.create') }}" class="btn-gold">
+        <a href="{{ route('agendamentos.index') }}" class="btn-gold">
             <i class="fas fa-plus"></i> Novo Agendamento
         </a>
     </div>

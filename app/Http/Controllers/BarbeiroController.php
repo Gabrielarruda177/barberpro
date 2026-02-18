@@ -2,52 +2,89 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Barbeiro;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 
 class BarbeiroController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): View
     {
-        $barbeiros = Barbeiro::all();
-        
+        $barbeiros = Barbeiro::orderBy('nome')->get();
         return view('barbeiros.index', compact('barbeiros'));
     }
-    
-    public function store(Request $request)
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'especialidades' => 'required|string',
-            'inicio_trabalho' => 'required',
-            'fim_trabalho' => 'required'
+            'especialidades' => 'required|string|max:255',
+            'inicio_trabalho' => 'required|date_format:H:i',
+            'fim_trabalho' => 'required|date_format:H:i|after:inicio_trabalho',
+        ], [
+            'fim_trabalho.after' => 'O horário de fim deve ser posterior ao horário de início.',
         ]);
-        
-        Barbeiro::create($request->all());
-        
-        return redirect()->route('barbeiros.index')->with('success', 'Barbeiro criado com sucesso!');
+
+        Barbeiro::create($validated);
+
+        return redirect()->route('barbeiros.index')
+                         ->with('success', 'Barbeiro criado com sucesso!');
     }
-    
-    public function update(Request $request, Barbeiro $barbeiro)
+
+    /**
+     * Return the specified resource in JSON format.
+     * Necessário para o JavaScript do modal de edição.
+     */
+    // MUDOU AQUI: de 'json' para 'getJson'
+    public function getJson(Barbeiro $barbeiro): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
+        return response()->json($barbeiro);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Barbeiro $barbeiro): RedirectResponse
+    {
+        $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'especialidades' => 'required|string',
-            'inicio_trabalho' => 'required',
-            'fim_trabalho' => 'required'
+            'especialidades' => 'required|string|max:255',
+            'inicio_trabalho' => 'required|date_format:H:i',
+            'fim_trabalho' => 'required|date_format:H:i|after:inicio_trabalho',
+        ], [
+            'fim_trabalho.after' => 'O horário de fim deve ser posterior ao horário de início.',
         ]);
-        
-        $barbeiro->update($request->all());
-        
-        return redirect()->route('barbeiros.index')->with('success', 'Barbeiro atualizado com sucesso!');
+
+        $barbeiro->update($validated);
+
+        return redirect()->route('barbeiros.index')
+                         ->with('success', 'Barbeiro atualizado com sucesso!');
     }
-    
-    public function destroy(Barbeiro $barbeiro)
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Barbeiro $barbeiro): RedirectResponse
     {
+        // Opcional: deletar a foto do barbeiro se existir
+        $avatarPath = 'images/barbeiros/' . $barbeiro->id . '.jpg';
+        if (Storage::disk('public')->exists($avatarPath)) {
+            Storage::disk('public')->delete($avatarPath);
+        }
+
         $barbeiro->delete();
-        
-        return redirect()->route('barbeiros.index')->with('success', 'Barbeiro excluído com sucesso!');
+
+        return redirect()->route('barbeiros.index')
+                         ->with('success', 'Barbeiro excluído com sucesso!');
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('especialidades');
             $table->time('inicio_trabalho');
             $table->time('fim_trabalho');
+            $table->boolean('ativo')->default(true);
             $table->timestamps();
         });
     }
