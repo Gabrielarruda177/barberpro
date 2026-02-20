@@ -4,138 +4,308 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>BarberPro - @yield('title', 'Sistema de Gestão')</title>
+    <title>BarberPro — @yield('title', 'Sistema de Gestão')</title>
 
-    <!-- CSS Principal (Laravel Mix/Vite) -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts (necessário para a página de barbeiros) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
-    <!-- 
-        ✅ A LINHA QUE ESTAVA FALTANDO!
-        Esta diretiva insere o CSS da página (ex: da página de barbeiros) aqui.
-    -->
     @yield('styles')
-
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="logo">
-                <i class="fas fa-cut"></i>
-                <span>BarberPro</span>
-            </div>
-            
+
+<div class="app-container" id="appContainer">
+
+    {{-- ══════════════ SIDEBAR ══════════════ --}}
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-header">
+            <button class="sidebar-toggle" id="sidebarToggle" title="Expandir/Recolher">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="logo-text">
+                <i class="fas fa-cut" style="color:var(--gold);font-size:0.85rem;margin-right:0.3rem;"></i>
+                BarberPro
+            </span>
+        </div>
+
+        <nav>
             <ul class="nav-menu">
-                <li>
-                    <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
+
+                <li class="nav-section-label">Principal</li>
+
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}"
+                       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="nav-label">Dashboard</span>
                     </a>
+                    <span class="nav-tooltip">Dashboard</span>
                 </li>
-                <li>
-                    <a href="{{ route('agenda') }}" class="nav-item {{ request()->routeIs('agenda*') ? 'active' : '' }}">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Agenda</span>
+
+                <li class="nav-item">
+                    <a href="{{ route('agenda') }}"
+                       class="nav-link {{ request()->routeIs('agenda*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span class="nav-label">Agenda</span>
                     </a>
+                    <span class="nav-tooltip">Agenda</span>
                 </li>
-                <li>
-                    <a href="{{ route('agendamentos.index') }}" class="nav-item {{ request()->routeIs('agendamentos.index') ? 'active' : '' }}">
-                        <i class="fas fa-list-alt"></i>
-                        <span>Agendamentos</span>
+
+                <li class="nav-item">
+                    <a href="{{ route('agendamentos.index') }}"
+                       class="nav-link {{ request()->routeIs('agendamentos.index') || request()->routeIs('agendamentos.create') || request()->routeIs('agendamentos.edit') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                        <span class="nav-label">Agendamentos</span>
+                        @php
+                            try {
+                                $pendentesHoje = \App\Models\Agendamento::where('status','agendado')
+                                    ->whereDate('data', today())->count();
+                            } catch(\Exception $e) { $pendentesHoje = 0; }
+                        @endphp
+                        @if(!empty($pendentesHoje) && $pendentesHoje > 0)
+                            <span class="nav-badge">{{ $pendentesHoje }}</span>
+                        @endif
                     </a>
+                    <span class="nav-tooltip">Agendamentos</span>
                 </li>
-                <li>
-                    <a href="{{ route('barbeiros.index') }}" class="nav-item {{ request()->routeIs('barbeiros.*') ? 'active' : '' }}">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Barbeiros</span>
+
+                <li class="nav-divider"></li>
+                <li class="nav-section-label">Cadastros</li>
+
+                <li class="nav-item">
+                    <a href="{{ route('barbeiros.index') }}"
+                       class="nav-link {{ request()->routeIs('barbeiros.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-user-tie"></i></span>
+                        <span class="nav-label">Barbeiros</span>
                     </a>
+                    <span class="nav-tooltip">Barbeiros</span>
                 </li>
-                <li>
-                    <a href="{{ route('servicos.index') }}" class="nav-item {{ request()->routeIs('servicos.*') ? 'active' : '' }}">
-                        <i class="fas fa-cut"></i>
-                        <span>Serviços</span>
+
+                <li class="nav-item">
+                    <a href="{{ route('servicos.index') }}"
+                       class="nav-link {{ request()->routeIs('servicos.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-cut"></i></span>
+                        <span class="nav-label">Serviços</span>
                     </a>
+                    <span class="nav-tooltip">Serviços</span>
                 </li>
+
+                <li class="nav-divider"></li>
+                <li class="nav-section-label">Sistema</li>
+
+                <li class="nav-item">
+                    <a href="{{ route('agendamentos.lixeira') }}"
+                       class="nav-link {{ request()->routeIs('agendamentos.lixeira') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-trash-alt"></i></span>
+                        <span class="nav-label">Lixeira</span>
+                    </a>
+                    <span class="nav-tooltip">Lixeira</span>
+                </li>
+
             </ul>
         </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            @if(session('success'))
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    {{ session('success') }}
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Administrador</div>
                 </div>
-            @endif
-            
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-            
-            @yield('content')
-        </main>
-    </div>
+            </div>
+        </div>
 
-    <!-- Modal de Soft Delete (mantive sua lógica) -->
-    <div class="modal-overlay" id="softDeleteModal" style="display: none;">
-        <div class="modal-box" style="background: #2d2d2d; border: 1px solid #404040; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; text-align: center; color: #f0f0f0;">
-            <div class="modal-icon" style="font-size: 3rem; color: #f87171; margin-bottom: 1rem;">
+    </aside>
+
+    {{-- ══════════════ MAIN ══════════════ --}}
+    <main class="main-content">
+
+        @if(session('success'))
+            <div class="alert alert-success" id="flashAlert">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger" id="flashAlert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @yield('content')
+
+    </main>
+</div>
+
+{{-- ══════════════ MODAL SOFT DELETE (global) ══════════════ --}}
+<div id="softDeleteModal" style="display:none;position:fixed;inset:0;z-index:1000;
+     background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);
+     align-items:center;justify-content:center;padding:1.5rem;">
+    <div style="background:#141414;border:1px solid #262626;border-radius:18px;
+                width:90%;max-width:400px;overflow:hidden;
+                box-shadow:0 40px 100px rgba(0,0,0,0.8);
+                animation:modalIn 0.24s cubic-bezier(.34,1.3,.64,1);">
+
+        {{-- header --}}
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:1.2rem 1.5rem;border-bottom:1px solid #262626;
+                    background:#1C1C1C;position:relative;">
+            <span style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;
+                         color:#F0EDE8;display:flex;align-items:center;gap:0.5rem;">
+                <i class="fas fa-exclamation-triangle" style="color:#D97070;font-size:0.85rem;"></i>
+                Confirmar Exclusão
+            </span>
+            <button onclick="fecharModal()" style="width:30px;height:30px;border-radius:7px;
+                border:1px solid #262626;background:transparent;color:#6B6560;cursor:pointer;
+                display:flex;align-items:center;justify-content:center;font-size:0.78rem;
+                transition:all 0.18s;"
+                onmouseover="this.style.color='#C9A84C';this.style.borderColor='#8B6914';"
+                onmouseout="this.style.color='#6B6560';this.style.borderColor='#262626';">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="position:absolute;bottom:0;left:1.5rem;width:36px;height:2px;background:#C9A84C;"></div>
+        </div>
+
+        {{-- body --}}
+        <div style="padding:2rem 1.5rem 1.5rem;text-align:center;
+                    display:flex;flex-direction:column;align-items:center;gap:1rem;">
+            <div style="width:68px;height:68px;border-radius:50%;
+                        background:rgba(139,51,51,0.12);border:2px solid rgba(139,51,51,0.28);
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:1.6rem;color:#D97070;">
                 <i class="fas fa-eye-slash"></i>
             </div>
-            <h3>Confirmar Apagar</h3>
-            <p>Tem certeza que deseja apagar o agendamento de <strong id="clientName"></strong>?</p>
-            <p style="font-size: 0.85rem; color: #a0a0a0; margin-top: 0.5rem;">
-                O agendamento será ocultado da agenda, mas permanecerá no sistema para histórico.
+            <p style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
+                      color:#F0EDE8;margin:0;">Ocultar agendamento?</p>
+            <div style="display:inline-flex;align-items:center;gap:0.4rem;
+                        background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);
+                        color:#C9A84C;padding:0.3rem 0.85rem;border-radius:20px;
+                        font-weight:600;font-size:0.85rem;">
+                <i class="fas fa-user"></i>
+                <span id="clientName">—</span>
+            </div>
+            <p style="font-size:0.82rem;color:#6B6560;line-height:1.65;margin:0;">
+                Será movido para a <strong style="color:#F0EDE8;">lixeira</strong>
+                e poderá ser restaurado depois.
             </p>
-            
-            <form id="softDeleteForm" method="POST" style="margin-top: 1.5rem;">
+        </div>
+
+        {{-- footer --}}
+        <div style="display:flex;justify-content:space-between;gap:0.6rem;
+                    padding:1rem 1.5rem;border-top:1px solid #262626;background:#1C1C1C;">
+            <button type="button" onclick="fecharModal()" style="
+                background:transparent;color:#9C9690;border:1px solid #262626;
+                padding:0.5rem 1.1rem;border-radius:7px;font-family:'DM Sans',sans-serif;
+                font-weight:500;font-size:0.85rem;cursor:pointer;
+                display:inline-flex;align-items:center;gap:0.4rem;transition:all 0.2s;"
+                onmouseover="this.style.borderColor='#8B6914';this.style.color='#C9A84C';"
+                onmouseout="this.style.borderColor='#262626';this.style.color='#9C9690';">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </button>
+            <form id="softDeleteForm" method="POST" style="display:inline;">
                 @csrf
-                <div class="modal-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-                    <button type="button" class="btn-cancel" onclick="fecharModal()" style="padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: 1px solid #404040; background: #1a1a1a; color: #a0a0a0;">
-                        <i class="fas fa-times"></i>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn-confirm" style="padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; background: #ef4444; color: white;">
-                        <i class="fas fa-eye-slash"></i>
-                        Apagar
-                    </button>
-                </div>
+                <button type="submit" id="softDeleteBtn" style="
+                    background:rgba(139,51,51,0.85);color:#F0EDE8;
+                    border:1px solid rgba(139,51,51,0.5);padding:0.5rem 1.2rem;
+                    border-radius:7px;font-family:'DM Sans',sans-serif;
+                    font-weight:600;font-size:0.85rem;cursor:pointer;
+                    display:inline-flex;align-items:center;gap:0.4rem;transition:background 0.2s;">
+                    <i class="fas fa-eye-slash"></i> Sim, ocultar
+                </button>
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Stack para scripts adicionais das páginas -->
-    @stack('scripts')
+<style>
+@keyframes modalIn {
+    from { opacity:0; transform:scale(0.93) translateY(18px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
 
-    <script src="{{ asset('js/app.js') }}"></script>
+{{-- ══════════════ SCRIPTS ══════════════ --}}
+<script>
+(function () {
+    /* ── Sidebar toggle ─── */
+    const KEY       = 'barberpro_sidebar';
+    const container = document.getElementById('appContainer');
+    const sidebar   = document.getElementById('sidebar');
+    const btn       = document.getElementById('sidebarToggle');
 
-    <!-- Script para o Modal (mantido, pois é global) -->
-    <script>
-        function fecharModal() {
-            const modal = document.getElementById('softDeleteModal');
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('softDeleteModal');
-            modal.addEventListener('click', function(e) { if (e.target === modal) fecharModal(); });
-            document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display === 'flex') fecharModal(); });
-        });
-    </script>
+    if (localStorage.getItem(KEY) === 'collapsed') {
+        sidebar.classList.add('collapsed');
+        container.classList.add('sidebar-collapsed');
+    }
+
+    btn.addEventListener('click', () => {
+        const collapsed = sidebar.classList.toggle('collapsed');
+        container.classList.toggle('sidebar-collapsed', collapsed);
+        localStorage.setItem(KEY, collapsed ? 'collapsed' : 'expanded');
+    });
+
+    /* ── Flash auto-dismiss ─── */
+    const flash = document.getElementById('flashAlert');
+    if (flash) {
+        setTimeout(() => {
+            flash.style.transition = 'opacity 0.4s, transform 0.4s';
+            flash.style.opacity    = '0';
+            flash.style.transform  = 'translateY(-6px)';
+            setTimeout(() => flash.remove(), 400);
+        }, 4000);
+    }
+})();
+
+/* ── Modal soft delete ─── */
+function confirmarApagar(id, nomeCliente) {
+    document.getElementById('clientName').textContent       = nomeCliente;
+    document.getElementById('softDeleteForm').action        = `/agendamentos/${id}`;
+    const btn = document.getElementById('softDeleteBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Sim, ocultar';
+
+    const modal = document.getElementById('softDeleteModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModal() {
+    document.getElementById('softDeleteModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('softDeleteModal');
+    modal.addEventListener('click', e => { if (e.target === modal) fecharModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') fecharModal();
+    });
+    document.getElementById('softDeleteForm').addEventListener('submit', function () {
+        const btn = document.getElementById('softDeleteBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ocultando...';
+    });
+});
+</script>
+
+<script src="{{ asset('js/app.js') }}"></script>
+@stack('scripts')
+
 </body>
 </html>

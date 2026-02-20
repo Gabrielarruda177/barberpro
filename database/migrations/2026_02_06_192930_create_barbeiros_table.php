@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+
     public function up()
     {
         Schema::create('barbeiros', function (Blueprint $table) {
@@ -16,6 +17,8 @@ return new class extends Migration
             $table->time('inicio_trabalho');
             $table->time('fim_trabalho');
             $table->boolean('ativo')->default(true);
+            $table->softDeletes(); 
+            
             $table->timestamps();
         });
     }
@@ -24,4 +27,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('barbeiros');
     }
+
 };

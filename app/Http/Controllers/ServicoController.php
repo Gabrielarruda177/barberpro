@@ -54,6 +54,37 @@ class ServicoController extends Controller
         return response()->json($servico);
     }
     
+
+    public function lixeira()
+{
+    $servicos = Servico::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->get();
+
+    return view('servicos.lixeira', compact('servicos'));
+}
+
+
+
+public function restore($id)
+{
+    $servico = Servico::withTrashed()->findOrFail($id);
+    $servico->restore();
+
+    return redirect()->route('servicos.lixeira')
+        ->with('success', 'Serviço restaurado com sucesso!');
+}
+
+public function forceDelete($id)
+{
+    $servico = Servico::withTrashed()->findOrFail($id);
+    $servico->forceDelete();
+
+    return redirect()->route('servicos.lixeira')
+        ->with('success', 'Serviço excluído permanentemente!');
+}
+
+
     public function toggleStatus(Servico $servico)
     {
         $servico->ativo = !$servico->ativo;

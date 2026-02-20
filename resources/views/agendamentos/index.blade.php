@@ -589,8 +589,9 @@
                         <td>{{ $agendamento->data->format('d/m/Y') }}</td>
                         <td>{{ $agendamento->horario }}</td>
                         <td class="client-name">{{ $agendamento->nome_cliente }}</td>
-                        <td>{{ $agendamento->barbeiro->nome }}</td>
-                        <td>{{ $agendamento->servico->nome }}</td>
+                        <td>{{ optional($agendamento->barbeiro)->nome ?? '—' }}</td>
+                        <td>{{ optional($agendamento->servico)->nome ?? '—' }}</td>
+>
                         <td style="color:var(--gold); font-weight:500;">R$ {{ number_format($agendamento->valor, 2, ',', '.') }}</td>
                         <td>
                             <span class="status-badge {{ $agendamento->status }}">
