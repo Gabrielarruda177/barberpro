@@ -591,7 +591,6 @@
                         <td class="client-name">{{ $agendamento->nome_cliente }}</td>
                         <td>{{ optional($agendamento->barbeiro)->nome ?? '—' }}</td>
                         <td>{{ optional($agendamento->servico)->nome ?? '—' }}</td>
->
                         <td style="color:var(--gold); font-weight:500;">R$ {{ number_format($agendamento->valor, 2, ',', '.') }}</td>
                         <td>
                             <span class="status-badge {{ $agendamento->status }}">
@@ -645,7 +644,7 @@
                 <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $data->copy()->subMonth()->format('Y-m-d') }}" class="calendar-nav-btn">
                     <i class="fas fa-chevron-left"></i>
                 </a>
-                <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ Carbon::today()->format('Y-m-d') }}" class="btn-ghost" style="padding:0.3rem 0.75rem; font-size:0.78rem;">
+                <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ \Carbon\Carbon::today()->format('Y-m-d') }}" class="btn-ghost" style="padding:0.3rem 0.75rem; font-size:0.78rem;">
                     Hoje
                 </a>
                 <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $data->copy()->addMonth()->format('Y-m-d') }}" class="calendar-nav-btn">
@@ -675,7 +674,7 @@
                             {{ $diaCalendario['dia'] }}
                         </div>
                         @if($diaCalendario['tem_agendamentos'])
-                        <div class="day-count">{{ $diaCalendario['total'] }}</div>
+                        <div class="day-count">{{ $diaCalendario['total_agendamentos'] }}</div>
                         @endif
                         <div>
                             @foreach($diaCalendario['agendamentos']->take(2) as $ag)
@@ -688,8 +687,8 @@
                                 {{ $ag->horario }} {{ $ag->nome_cliente }}
                             </div>
                             @endforeach
-                            @if($diaCalendario['total'] > 2)
-                            <div class="cal-more">+{{ $diaCalendario['total'] - 2 }} mais</div>
+                            @if($diaCalendario['total_agendamentos'] > 2)
+                            <div class="cal-more">+{{ $diaCalendario['total_agendamentos'] - 2 }} mais</div>
                             @endif
                         </div>
                         <a href="{{ route('agendamentos.index') }}?view=calendar&selected_date={{ $diaCalendario['data']->format('Y-m-d') }}" class="cal-link"></a>
@@ -732,8 +731,8 @@
                     <tr>
                         <td>{{ $ag->horario }}</td>
                         <td class="client-name">{{ $ag->nome_cliente }}</td>
-                        <td>{{ $ag->barbeiro->nome }}</td>
-                        <td>{{ $ag->servico->nome }}</td>
+                        <td>{{ optional($ag->barbeiro)->nome ?? '—' }}</td>
+                        <td>{{ optional($ag->servico)->nome ?? '—' }}</td>
                         <td>
                             <span class="status-badge {{ $ag->status }}">{{ ucfirst($ag->status) }}</span>
                         </td>

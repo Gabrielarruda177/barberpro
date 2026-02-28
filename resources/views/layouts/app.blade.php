@@ -77,7 +77,7 @@
 
                 <li class="nav-item">
                     <a href="{{ route('barbeiros.index') }}"
-                       class="nav-link {{ request()->routeIs('barbeiros.*') ? 'active' : '' }}">
+                       class="nav-link {{ request()->routeIs('barbeiros.index') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="fas fa-user-tie"></i></span>
                         <span class="nav-label">Barbeiros</span>
                     </a>
@@ -86,7 +86,7 @@
 
                 <li class="nav-item">
                     <a href="{{ route('servicos.index') }}"
-                       class="nav-link {{ request()->routeIs('servicos.*') ? 'active' : '' }}">
+                       class="nav-link {{ request()->routeIs('servicos.index') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="fas fa-cut"></i></span>
                         <span class="nav-label">Serviços</span>
                     </a>
@@ -96,26 +96,106 @@
                 <li class="nav-divider"></li>
                 <li class="nav-section-label">Sistema</li>
 
-                <li class="nav-item">
-                    <a href="{{ route('agendamentos.lixeira') }}"
-                       class="nav-link {{ request()->routeIs('agendamentos.lixeira') ? 'active' : '' }}">
+                {{-- ── LIXEIRA com submenu ── --}}
+                @php
+                    $lixeiraAtiva = request()->routeIs('agendamentos.lixeira')
+                                 || request()->routeIs('barbeiros.lixeira')
+                                 || request()->routeIs('servicos.lixeira');
+
+                    try {
+                        $totalLixeira = \App\Models\Agendamento::onlyTrashed()->count()
+                                      + \App\Models\Barbeiro::onlyTrashed()->count()
+                                      + \App\Models\Servico::onlyTrashed()->count();
+                    } catch(\Exception $e) { $totalLixeira = 0; }
+                @endphp
+
+                <li class="nav-item nav-has-submenu {{ $lixeiraAtiva ? 'open' : '' }}">
+                    <button class="nav-link nav-link-toggle {{ $lixeiraAtiva ? 'active' : '' }}"
+                            onclick="toggleSubmenu(this)">
                         <span class="nav-icon"><i class="fas fa-trash-alt"></i></span>
                         <span class="nav-label">Lixeira</span>
-                    </a>
+                        @if($totalLixeira > 0)
+                            <span class="nav-badge" style="background:rgba(217,112,112,0.2);color:#D97070;">
+                                {{ $totalLixeira }}
+                            </span>
+                        @endif
+                        <span class="nav-chevron nav-label"><i class="fas fa-chevron-down"></i></span>
+                    </button>
                     <span class="nav-tooltip">Lixeira</span>
+
+                    <ul class="nav-submenu">
+                        <li>
+                            <a href="{{ route('agendamentos.lixeira') }}"
+                               class="nav-sublink {{ request()->routeIs('agendamentos.lixeira') ? 'active' : '' }}">
+                                <i class="fas fa-calendar-times"></i>
+                                <span>Agendamentos</span>
+                                @php
+                                    try { $lxAg = \App\Models\Agendamento::onlyTrashed()->count(); }
+                                    catch(\Exception $e) { $lxAg = 0; }
+                                @endphp
+                                @if($lxAg > 0)
+                                    <span class="sub-count">{{ $lxAg }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('barbeiros.lixeira') }}"
+                               class="nav-sublink {{ request()->routeIs('barbeiros.lixeira') ? 'active' : '' }}">
+                                <i class="fas fa-user-slash"></i>
+                                <span>Barbeiros</span>
+                                @php
+                                    try { $lxBa = \App\Models\Barbeiro::onlyTrashed()->count(); }
+                                    catch(\Exception $e) { $lxBa = 0; }
+                                @endphp
+                                @if($lxBa > 0)
+                                    <span class="sub-count">{{ $lxBa }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('servicos.lixeira') }}"
+                               class="nav-sublink {{ request()->routeIs('servicos.lixeira') ? 'active' : '' }}">
+                                <i class="fas fa-scissors"></i>
+                                <span>Serviços</span>
+                                @php
+                                    try { $lxSv = \App\Models\Servico::onlyTrashed()->count(); }
+                                    catch(\Exception $e) { $lxSv = 0; }
+                                @endphp
+                                @if($lxSv > 0)
+                                    <span class="sub-count">{{ $lxSv }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
             </ul>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="user-avatar">A</div>
-                <div class="user-info">
-                    <div class="user-name">Admin</div>
-                    <div class="user-role">Administrador</div>
+            <a href="{{ route('profile.index') }}" class="sidebar-user" 
+               style="text-decoration:none;display:flex;align-items:center;gap:0.75rem;
+                      padding:0.5rem;border-radius:10px;transition:background 0.2s;"
+               onmouseover="this.style.background='rgba(201,168,76,0.08)';"
+               onmouseout="this.style.background='transparent';">
+                <div class="user-avatar">
+                    @auth
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    @else
+                        A
+                    @endauth
                 </div>
-            </div>
+                <div class="user-info">
+                    <div class="user-name">
+                        @auth
+                            {{ Auth::user()->name }}
+                        @else
+                            Admin
+                        @endauth
+                    </div>
+                    <div class="user-role">Perfil</div>
+                </div>
+            </a>
         </div>
 
     </aside>
@@ -192,13 +272,13 @@
                 <i class="fas fa-eye-slash"></i>
             </div>
             <p style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
-                      color:#F0EDE8;margin:0;">Ocultar agendamento?</p>
+                      color:#F0EDE8;margin:0;" id="softDeleteTitle">Ocultar item?</p>
             <div style="display:inline-flex;align-items:center;gap:0.4rem;
                         background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);
                         color:#C9A84C;padding:0.3rem 0.85rem;border-radius:20px;
                         font-weight:600;font-size:0.85rem;">
-                <i class="fas fa-user"></i>
-                <span id="clientName">—</span>
+                <i id="softDeleteIcon" class="fas fa-user"></i>
+                <span id="softDeleteName">—</span>
             </div>
             <p style="font-size:0.82rem;color:#6B6560;line-height:1.65;margin:0;">
                 Será movido para a <strong style="color:#F0EDE8;">lixeira</strong>
@@ -220,13 +300,14 @@
             </button>
             <form id="softDeleteForm" method="POST" style="display:inline;">
                 @csrf
+                @method('DELETE')
                 <button type="submit" id="softDeleteBtn" style="
                     background:rgba(139,51,51,0.85);color:#F0EDE8;
                     border:1px solid rgba(139,51,51,0.5);padding:0.5rem 1.2rem;
                     border-radius:7px;font-family:'DM Sans',sans-serif;
                     font-weight:600;font-size:0.85rem;cursor:pointer;
                     display:inline-flex;align-items:center;gap:0.4rem;transition:background 0.2s;">
-                    <i class="fas fa-eye-slash"></i> Sim, ocultar
+                    <i class="fas fa-eye-slash"></i> Sim, mover para lixeira
                 </button>
             </form>
         </div>
@@ -238,6 +319,61 @@
     from { opacity:0; transform:scale(0.93) translateY(18px); }
     to   { opacity:1; transform:scale(1) translateY(0); }
 }
+
+/* ── Submenu da lixeira ── */
+.nav-has-submenu .nav-submenu {
+    display: none;
+    list-style: none;
+    padding: 0.25rem 0 0.25rem 2.5rem;
+    margin: 0;
+}
+.nav-has-submenu.open .nav-submenu {
+    display: block;
+}
+.nav-sublink {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted, #6B6560);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    margin-bottom: 0.1rem;
+}
+.nav-sublink:hover,
+.nav-sublink.active {
+    background: rgba(201,168,76,0.08);
+    color: #C9A84C;
+}
+.nav-sublink i { font-size: 0.7rem; width: 14px; text-align: center; }
+.nav-sublink .sub-count {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-weight: 700;
+    background: rgba(217,112,112,0.15);
+    color: #D97070;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+}
+.nav-link-toggle {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+.nav-chevron {
+    margin-left: auto;
+    font-size: 0.6rem;
+    transition: transform 0.2s;
+}
+.nav-has-submenu.open .nav-chevron i {
+    transform: rotate(180deg);
+}
+/* Ocultar submenu quando sidebar recolhida */
+.sidebar.collapsed .nav-submenu { display: none !important; }
 </style>
 
 {{-- ══════════════ SCRIPTS ══════════════ --}}
@@ -272,13 +408,31 @@
     }
 })();
 
-/* ── Modal soft delete ─── */
-function confirmarApagar(id, nomeCliente) {
-    document.getElementById('clientName').textContent       = nomeCliente;
-    document.getElementById('softDeleteForm').action        = `/agendamentos/${id}`;
+/* ── Submenu toggle ─── */
+function toggleSubmenu(btn) {
+    const li = btn.closest('.nav-has-submenu');
+    li.classList.toggle('open');
+}
+
+/* ── Modal soft delete genérico ──
+ *
+ * Uso em qualquer view:
+ *   confirmarApagar('/agendamentos/5', 'João Silva', 'Agendamento', 'fa-calendar')
+ *   confirmarApagar('/barbeiros/3', 'Carlos Lima', 'Barbeiro', 'fa-user-tie')
+ *   confirmarApagar('/servicos/2', 'Corte Masculino', 'Serviço', 'fa-cut')
+ */
+function confirmarApagar(action, nome, tipo, icon) {
+    tipo  = tipo  || 'Item';
+    icon  = icon  || 'fa-trash';
+
+    document.getElementById('softDeleteTitle').textContent = 'Mover ' + tipo + ' para lixeira?';
+    document.getElementById('softDeleteName').textContent  = nome;
+    document.getElementById('softDeleteIcon').className    = 'fas ' + icon;
+    document.getElementById('softDeleteForm').action       = action;
+
     const btn = document.getElementById('softDeleteBtn');
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Sim, ocultar';
+    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Sim, mover para lixeira';
 
     const modal = document.getElementById('softDeleteModal');
     modal.style.display = 'flex';
@@ -299,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('softDeleteForm').addEventListener('submit', function () {
         const btn = document.getElementById('softDeleteBtn');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ocultando...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Movendo...';
     });
 });
 </script>

@@ -81,7 +81,6 @@
         border-color:var(--gold-dim); transform:translateY(-4px);
         box-shadow:0 12px 40px rgba(0,0,0,0.5);
     }
-    /* top gold line on hover */
     .barber-card::before {
         content:''; position:absolute; top:0; left:0; right:0; height:2px;
         background:linear-gradient(90deg, var(--gold-dim), var(--gold-light));
@@ -221,7 +220,6 @@
         padding:1.25rem 1.5rem; border-bottom:1px solid var(--dark-border);
         background:var(--dark-elevated); position:relative;
     }
-    /* Gold accent line on modal header */
     .modal-header::after {
         content:''; position:absolute; bottom:0; left:1.5rem;
         width:40px; height:2px; background:var(--gold);
@@ -377,7 +375,8 @@
                     @else
                         <span class="barber-avatar-initials">{{ $initials }}</span>
                     @endif
-                    <span class="avatar-status" title="Ativo"></span>
+                    <span class="avatar-status" title="{{ $barbeiro->ativo ? 'Ativo' : 'Inativo' }}"
+                          style="background: {{ $barbeiro->ativo ? '#3D8B68' : '#8B3333' }};"></span>
                 </div>
                 <div class="barber-name">{{ $barbeiro->nome }}</div>
             </div>
@@ -525,7 +524,7 @@
                 <span id="deleteBarberName">—</span>
             </div>
             <p class="delete-modal-desc">
-                Esta ação é <strong style="color:var(--text-primary);">irreversível</strong>.
+                Esta ação moverá o barbeiro para a <strong style="color:var(--text-primary);">lixeira</strong>.
                 Todos os agendamentos futuros vinculados a este barbeiro serão afetados.
             </p>
         </div>
@@ -560,10 +559,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal  = id => { document.getElementById(id).classList.add('active');    document.body.style.overflow='hidden'; };
     const closeModal = id => { document.getElementById(id).classList.remove('active'); document.body.style.overflow='';       };
 
-    // Fechar ao clicar no overlay
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', e => {
-            if (e.target === overlay) overlay.classList.contains('active') && overlay.classList.remove('active') || (document.body.style.overflow = '');
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         });
     });
 

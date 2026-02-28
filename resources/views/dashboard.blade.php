@@ -487,9 +487,9 @@
                 </div>
                 <div>
                     <div class="appt-client">{{ $ag->nome_cliente }}</div>
-                    <div class="appt-service">{{ $ag->servico->nome }}</div>
+                    <div class="appt-service">{{ optional($ag->servico)->nome ?? 'Serviço não definido' }}</div>
                 </div>
-                <div class="appt-barber"><i class="fas fa-scissors"></i> {{ $ag->barbeiro->nome }}</div>
+                <div class="appt-barber"><i class="fas fa-scissors"></i> {{ optional($ag->barbeiro)->nome ?? 'Barbeiro não definido' }}</div>
                 <div style="display:flex;align-items:center;gap:0.5rem;">
                     <span class="appt-status {{ $ag->status }}">{{ ucfirst($ag->status) }}</span>
                     <a href="{{ route('agendamentos.edit', $ag) }}" class="btn-icon-sm"><i class="fas fa-pen"></i></a>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Lixeira')
+@section('title', 'Lixeira — Serviços')
 
 @section('styles')
 <style>
@@ -90,19 +90,28 @@
     .lixeira-table tbody tr { transition:background 0.15s; }
     .lixeira-table tbody tr:hover td { background:rgba(255,255,255,0.02); }
 
-    .cell-client-name { font-weight:600; color:var(--text-primary); }
-    .cell-date {
-        font-family:'Playfair Display',serif; font-size:0.9rem;
-        font-weight:600; color:var(--text-dim); white-space:nowrap;
-    }
-    .cell-time {
-        font-family:'Playfair Display',serif; font-size:0.95rem;
-        font-weight:700; color:var(--gold);
-    }
+    .cell-name { font-weight:600; color:var(--text-primary); }
+    .cell-desc { font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem; line-height:1.4; }
+
     .cell-price {
         font-family:'Playfair Display',serif; font-size:0.95rem;
         font-weight:700; color:var(--gold); white-space:nowrap;
     }
+    .cell-duration {
+        display:inline-flex; align-items:center; gap:0.35rem;
+        background:var(--dark-elevated); border:1px solid var(--dark-border);
+        color:var(--text-dim); padding:0.2rem 0.6rem; border-radius:20px;
+        font-size:0.68rem; font-weight:500; white-space:nowrap;
+    }
+
+    .status-badge {
+        display:inline-flex; align-items:center; gap:0.3rem;
+        padding:0.2rem 0.6rem; border-radius:20px;
+        font-size:0.65rem; font-weight:700;
+    }
+    .status-badge.ativo   { background:rgba(76,175,125,0.12); color:var(--green); border:1px solid var(--green-border); }
+    .status-badge.inativo { background:var(--dark-elevated); color:var(--text-muted); border:1px solid var(--dark-border); }
+
     .deleted-badge {
         display:inline-flex; align-items:center; gap:0.3rem;
         background:var(--red-bg); border:1px solid var(--red-border);
@@ -110,7 +119,7 @@
         font-size:0.65rem; font-weight:700; white-space:nowrap;
     }
 
-    .action-wrap { display:flex; gap:0.35rem; align-items:center; }
+    .action-wrap { display:flex; gap:0.35rem; align-items:center; justify-content:flex-end; }
     .btn-restore {
         display:inline-flex; align-items:center; gap:0.35rem;
         padding:0.35rem 0.8rem; border-radius:7px;
@@ -124,12 +133,9 @@
         width:30px; height:30px; border-radius:7px;
         border:1px solid var(--dark-border); background:transparent;
         color:var(--text-muted); font-size:0.72rem; cursor:pointer;
-        display:flex; align-items:center; justify-content:center;
-        transition:all 0.18s;
+        display:flex; align-items:center; justify-content:center; transition:all 0.18s;
     }
-    .btn-delete-perm:hover {
-        border-color:var(--red-border); color:var(--red); background:var(--red-bg);
-    }
+    .btn-delete-perm:hover { border-color:var(--red-border); color:var(--red); background:var(--red-bg); }
 
     .empty-state { text-align:center; padding:5rem 2rem; }
     .empty-icon-ring {
@@ -148,18 +154,8 @@
         padding:1rem 1.5rem; border-top:1px solid var(--dark-border);
         display:flex; justify-content:center;
     }
-    .pagination-wrap .pagination { display:flex; gap:0.3rem; list-style:none; margin:0; }
-    .pagination-wrap .page-link {
-        display:flex; align-items:center; justify-content:center;
-        min-width:32px; height:32px; padding:0 0.6rem;
-        background:var(--dark-elevated); border:1px solid var(--dark-border);
-        border-radius:7px; color:var(--text-dim); text-decoration:none;
-        font-size:0.8rem; font-weight:500; transition:all 0.2s;
-    }
-    .pagination-wrap .page-link:hover { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
-    .pagination-wrap .page-item.active .page-link { background:var(--gold); border-color:var(--gold); color:#0D0D0D; }
-    .pagination-wrap .page-item.disabled .page-link { opacity:0.4; pointer-events:none; }
 
+    /* Modal */
     .modal-overlay {
         position:fixed; inset:0; z-index:1000;
         background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
@@ -246,23 +242,23 @@
         <div>
             <h1 class="page-title">
                 <i class="fas fa-trash-alt"></i>
-                Lixeira
+                Lixeira — Serviços
             </h1>
             <div class="page-subtitle">
-                Agendamentos removidos — podem ser restaurados a qualquer momento
+                Serviços removidos — podem ser restaurados a qualquer momento
             </div>
         </div>
-        <a href="{{ route('agendamentos.index') }}" class="btn-ghost">
+        <a href="{{ route('servicos.index') }}" class="btn-ghost">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
     </div>
 
     {{-- WARNING BANNER --}}
-    @if($agendamentos->count() > 0)
+    @if($servicos->count() > 0)
     <div class="warning-banner">
         <i class="fas fa-exclamation-triangle"></i>
         <span>
-            Ao <strong>excluir permanentemente</strong>, o agendamento é removido para sempre e não poderá ser recuperado.
+            Ao <strong>excluir permanentemente</strong>, o serviço é removido para sempre e não poderá ser recuperado.
         </span>
     </div>
     @endif
@@ -271,79 +267,69 @@
     <div class="table-card">
         <div class="table-card-header">
             <h2 class="table-card-title">Itens na lixeira</h2>
-            @if($agendamentos->count() > 0)
+            @if($servicos->count() > 0)
                 <span class="count-pill">
-                    {{ $agendamentos->total() }} item{{ $agendamentos->total() !== 1 ? 's' : '' }}
+                    {{ $servicos->total() }} item{{ $servicos->total() !== 1 ? 's' : '' }}
                 </span>
             @endif
         </div>
 
-        @if($agendamentos->count() > 0)
+        @if($servicos->count() > 0)
         <div style="overflow-x:auto;">
             <table class="lixeira-table">
                 <thead>
                     <tr>
-                        <th>Cliente</th>
-                        <th>Data</th>
-                        <th>Horário</th>
-                        <th>Barbeiro</th>
                         <th>Serviço</th>
-                        <th>Valor</th>
+                        <th>Duração</th>
+                        <th>Preço</th>
+                        <th>Status</th>
                         <th>Removido em</th>
                         <th style="text-align:right;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($agendamentos as $agendamento)
+                    @foreach($servicos as $servico)
                     <tr>
                         <td>
-                            <div class="cell-client-name">{{ $agendamento->nome_cliente }}</div>
+                            <div class="cell-name">{{ $servico->nome }}</div>
+                            @if($servico->descricao)
+                                <div class="cell-desc">{{ Str::limit($servico->descricao, 60) }}</div>
+                            @endif
                         </td>
                         <td>
-                            <span class="cell-date">
-                                {{ \Carbon\Carbon::parse($agendamento->data)->format('d/m/Y') }}
+                            <span class="cell-duration">
+                                <i class="fas fa-clock" style="font-size:0.6rem;color:var(--gold-dim);"></i>
+                                {{ $servico->duracao_minutos }} min
                             </span>
-                        </td>
-                        <td>
-                            <span class="cell-time">
-                                {{ \Carbon\Carbon::parse($agendamento->horario)->format('H:i') }}
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.83rem;color:var(--text-dim);">
-                                <i class="fas fa-user-tie" style="font-size:0.65rem;color:var(--gold-dim);"></i>
-                                {{ optional($agendamento->barbeiro)->nome ?? '—' }}
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-size:0.83rem;color:var(--text-dim);">
-                                {{ optional($agendamento->servico)->nome ?? '—' }}
-                            </div>
                         </td>
                         <td>
                             <span class="cell-price">
-                                R$ {{ number_format($agendamento->valor ?? 0, 2, ',', '.') }}
+                                R$ {{ number_format($servico->preco, 2, ',', '.') }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ $servico->ativo ? 'ativo' : 'inativo' }}">
+                                <i class="fas fa-{{ $servico->ativo ? 'check' : 'times' }}-circle" style="font-size:0.55rem;"></i>
+                                {{ $servico->ativo ? 'Ativo' : 'Inativo' }}
                             </span>
                         </td>
                         <td>
                             <span class="deleted-badge">
                                 <i class="fas fa-clock" style="font-size:0.6rem;"></i>
-                                {{ $agendamento->deleted_at->format('d/m/Y H:i') }}
+                                {{ $servico->deleted_at->format('d/m/Y H:i') }}
                             </span>
                         </td>
                         <td>
-                            <div class="action-wrap" style="justify-content:flex-end;">
-                                {{-- Restaurar --}}
-                                <form action="{{ route('agendamentos.restore', $agendamento->id) }}"
+                            <div class="action-wrap">
+                                <form action="{{ route('servicos.restore', $servico->id) }}"
                                       method="POST" style="display:inline;">
                                     @csrf
                                     <button type="submit" class="btn-restore">
                                         <i class="fas fa-undo"></i> Restaurar
                                     </button>
                                 </form>
-                                {{-- Excluir permanentemente (abre modal) --}}
                                 <button class="btn-delete-perm"
-                                        onclick="openDeleteModal({{ $agendamento->id }}, '{{ addslashes($agendamento->nome_cliente) }}')"
+                                        onclick="openDeleteModal({{ $servico->id }}, '{{ addslashes($servico->nome) }}')"
                                         title="Excluir permanentemente">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -355,9 +341,9 @@
             </table>
         </div>
 
-        @if($agendamentos->hasPages())
+        @if($servicos->hasPages())
         <div class="pagination-wrap">
-            {{ $agendamentos->links() }}
+            {{ $servicos->links() }}
         </div>
         @endif
 
@@ -367,9 +353,9 @@
                 <i class="fas fa-check"></i>
             </div>
             <h3>Lixeira vazia</h3>
-            <p>Nenhum agendamento foi removido ainda.</p>
-            <a href="{{ route('agendamentos.index') }}" class="btn-ghost">
-                <i class="fas fa-calendar-check"></i> Ver Agendamentos
+            <p>Nenhum serviço foi removido ainda.</p>
+            <a href="{{ route('servicos.index') }}" class="btn-ghost">
+                <i class="fas fa-cut"></i> Ver Serviços
             </a>
         </div>
         @endif
@@ -393,12 +379,12 @@
             <div class="modal-icon-ring"><i class="fas fa-skull"></i></div>
             <p class="modal-h3">Excluir para sempre?</p>
             <div class="modal-pill">
-                <i class="fas fa-user"></i>
+                <i class="fas fa-cut"></i>
                 <span id="deletePermName">—</span>
             </div>
             <p class="modal-desc">
                 Esta ação é <strong style="color:var(--text-primary);">permanente e irreversível</strong>.
-                O agendamento será completamente removido do sistema.
+                O serviço será completamente removido do sistema.
             </p>
         </div>
         <div class="modal-footer">
@@ -423,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openDeleteModal = (id, nome) => {
         document.getElementById('deletePermName').textContent = nome;
-        document.getElementById('deletePermForm').action = `/agendamentos/${id}/deletar`;
+        document.getElementById('deletePermForm').action = `/servicos/${id}/deletar`;
         const btn = document.getElementById('deletePermBtn');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-times"></i> Excluir permanentemente';

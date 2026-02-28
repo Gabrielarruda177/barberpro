@@ -525,7 +525,7 @@
                 <span id="deleteServiceName">—</span>
             </div>
             <p class="delete-modal-desc">
-                Esta ação é <strong style="color:var(--text-primary);">irreversível</strong>.
+                Esta ação moverá o serviço para a <strong style="color:var(--text-primary);">lixeira</strong>.
                 Agendamentos futuros vinculados a este serviço serão afetados.
             </p>
         </div>
@@ -657,4 +657,4 @@ document.addEventListener('DOMContentLoaded', () => {
     @endif
 });
 </script>
-@endpush 
+@endpush
