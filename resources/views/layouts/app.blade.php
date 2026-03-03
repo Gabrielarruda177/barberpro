@@ -172,30 +172,76 @@
             </ul>
         </nav>
 
+        {{-- ── FOOTER: usuário + logout ── --}}
         <div class="sidebar-footer">
-            <a href="{{ route('profile.index') }}" class="sidebar-user" 
-               style="text-decoration:none;display:flex;align-items:center;gap:0.75rem;
-                      padding:0.5rem;border-radius:10px;transition:background 0.2s;"
-               onmouseover="this.style.background='rgba(201,168,76,0.08)';"
-               onmouseout="this.style.background='transparent';">
-                <div class="user-avatar">
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+
+                {{-- Link para perfil com avatar --}}
+                <a href="{{ route('profile.index') }}"
+                   style="text-decoration:none;display:flex;align-items:center;gap:0.75rem;
+                          padding:0.5rem;border-radius:10px;transition:background 0.2s;"
+                   onmouseover="this.style.background='rgba(201,168,76,0.08)';"
+                   onmouseout="this.style.background='transparent';">
+
+                    {{-- Avatar: foto ou inicial --}}
                     @auth
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                    @else
-                        A
-                    @endauth
-                </div>
-                <div class="user-info">
-                    <div class="user-name">
-                        @auth
-                            {{ Auth::user()->name }}
+                        @php
+                            $authUser   = Auth::user();
+                            $temFotoSb  = !empty($authUser->foto)
+                                && \Illuminate\Support\Facades\Storage::disk('public')->exists('fotos/' . $authUser->foto);
+                        @endphp
+
+                        @if($temFotoSb)
+                            {{-- Foto de perfil --}}
+                            <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
+                                        border:2px solid rgba(201,168,76,0.4);flex-shrink:0;">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url('fotos/' . $authUser->foto) }}"
+                                     alt="{{ $authUser->name }}"
+                                     style="width:100%;height:100%;object-fit:cover;">
+                            </div>
                         @else
-                            Admin
-                        @endauth
-                    </div>
-                    <div class="user-role">Perfil</div>
-                </div>
-            </a>
+                            {{-- Inicial --}}
+                            <div class="user-avatar" style="flex-shrink:0;">
+                                {{ strtoupper(substr($authUser->name, 0, 1)) }}
+                            </div>
+                        @endif
+
+                        <div class="user-info" style="overflow:hidden;">
+                            <div class="user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ $authUser->name }}
+                            </div>
+                            <div class="user-role">Perfil</div>
+                        </div>
+                    @else
+                        <div class="user-avatar" style="flex-shrink:0;">A</div>
+                        <div class="user-info">
+                            <div class="user-name">Admin</div>
+                            <div class="user-role">Perfil</div>
+                        </div>
+                    @endauth
+                </a>
+
+                {{-- Botão de Logout --}}
+                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit"
+                            style="width:100%;background:transparent;border:none;
+                                   display:flex;align-items:center;gap:0.75rem;
+                                   padding:0.5rem;border-radius:10px;cursor:pointer;
+                                   color:#6B6560;font-size:0.85rem;font-family:inherit;
+                                   transition:background 0.2s,color 0.2s;"
+                            onmouseover="this.style.background='rgba(217,112,112,0.1)';this.style.color='#D97070';"
+                            onmouseout="this.style.background='transparent';this.style.color='#6B6560';">
+                        <span style="width:32px;height:32px;border-radius:8px;flex-shrink:0;
+                                     background:rgba(217,112,112,0.1);color:#D97070;
+                                     display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </span>
+                        <span class="nav-label" style="font-weight:500;">Sair</span>
+                    </button>
+                </form>
+
+            </div>
         </div>
 
     </aside>
@@ -242,7 +288,6 @@
                 box-shadow:0 40px 100px rgba(0,0,0,0.8);
                 animation:modalIn 0.24s cubic-bezier(.34,1.3,.64,1);">
 
-        {{-- header --}}
         <div style="display:flex;justify-content:space-between;align-items:center;
                     padding:1.2rem 1.5rem;border-bottom:1px solid #262626;
                     background:#1C1C1C;position:relative;">
@@ -253,8 +298,7 @@
             </span>
             <button onclick="fecharModal()" style="width:30px;height:30px;border-radius:7px;
                 border:1px solid #262626;background:transparent;color:#6B6560;cursor:pointer;
-                display:flex;align-items:center;justify-content:center;font-size:0.78rem;
-                transition:all 0.18s;"
+                display:flex;align-items:center;justify-content:center;font-size:0.78rem;transition:all 0.18s;"
                 onmouseover="this.style.color='#C9A84C';this.style.borderColor='#8B6914';"
                 onmouseout="this.style.color='#6B6560';this.style.borderColor='#262626';">
                 <i class="fas fa-times"></i>
@@ -262,7 +306,6 @@
             <div style="position:absolute;bottom:0;left:1.5rem;width:36px;height:2px;background:#C9A84C;"></div>
         </div>
 
-        {{-- body --}}
         <div style="padding:2rem 1.5rem 1.5rem;text-align:center;
                     display:flex;flex-direction:column;align-items:center;gap:1rem;">
             <div style="width:68px;height:68px;border-radius:50%;
@@ -286,7 +329,6 @@
             </p>
         </div>
 
-        {{-- footer --}}
         <div style="display:flex;justify-content:space-between;gap:0.6rem;
                     padding:1rem 1.5rem;border-top:1px solid #262626;background:#1C1C1C;">
             <button type="button" onclick="fecharModal()" style="
@@ -320,66 +362,36 @@
     to   { opacity:1; transform:scale(1) translateY(0); }
 }
 
-/* ── Submenu da lixeira ── */
 .nav-has-submenu .nav-submenu {
-    display: none;
-    list-style: none;
-    padding: 0.25rem 0 0.25rem 2.5rem;
-    margin: 0;
+    display: none; list-style: none;
+    padding: 0.25rem 0 0.25rem 2.5rem; margin: 0;
 }
-.nav-has-submenu.open .nav-submenu {
-    display: block;
-}
+.nav-has-submenu.open .nav-submenu { display: block; }
+
 .nav-sublink {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.45rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    color: var(--text-muted, #6B6560);
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.45rem 0.75rem; border-radius: 6px;
+    font-size: 0.8rem; color: var(--text-muted, #6B6560);
+    text-decoration: none; transition: background 0.15s, color 0.15s;
     margin-bottom: 0.1rem;
 }
-.nav-sublink:hover,
-.nav-sublink.active {
-    background: rgba(201,168,76,0.08);
-    color: #C9A84C;
+.nav-sublink:hover, .nav-sublink.active {
+    background: rgba(201,168,76,0.08); color: #C9A84C;
 }
 .nav-sublink i { font-size: 0.7rem; width: 14px; text-align: center; }
 .nav-sublink .sub-count {
-    margin-left: auto;
-    font-size: 0.6rem;
-    font-weight: 700;
-    background: rgba(217,112,112,0.15);
-    color: #D97070;
-    padding: 0.1rem 0.4rem;
-    border-radius: 10px;
+    margin-left: auto; font-size: 0.6rem; font-weight: 700;
+    background: rgba(217,112,112,0.15); color: #D97070;
+    padding: 0.1rem 0.4rem; border-radius: 10px;
 }
-.nav-link-toggle {
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-}
-.nav-chevron {
-    margin-left: auto;
-    font-size: 0.6rem;
-    transition: transform 0.2s;
-}
-.nav-has-submenu.open .nav-chevron i {
-    transform: rotate(180deg);
-}
-/* Ocultar submenu quando sidebar recolhida */
+.nav-link-toggle { background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+.nav-chevron { margin-left: auto; font-size: 0.6rem; transition: transform 0.2s; }
+.nav-has-submenu.open .nav-chevron i { transform: rotate(180deg); }
 .sidebar.collapsed .nav-submenu { display: none !important; }
 </style>
 
-{{-- ══════════════ SCRIPTS ══════════════ --}}
 <script>
 (function () {
-    /* ── Sidebar toggle ─── */
     const KEY       = 'barberpro_sidebar';
     const container = document.getElementById('appContainer');
     const sidebar   = document.getElementById('sidebar');
@@ -396,7 +408,6 @@
         localStorage.setItem(KEY, collapsed ? 'collapsed' : 'expanded');
     });
 
-    /* ── Flash auto-dismiss ─── */
     const flash = document.getElementById('flashAlert');
     if (flash) {
         setTimeout(() => {
@@ -408,34 +419,21 @@
     }
 })();
 
-/* ── Submenu toggle ─── */
 function toggleSubmenu(btn) {
-    const li = btn.closest('.nav-has-submenu');
-    li.classList.toggle('open');
+    btn.closest('.nav-has-submenu').classList.toggle('open');
 }
 
-/* ── Modal soft delete genérico ──
- *
- * Uso em qualquer view:
- *   confirmarApagar('/agendamentos/5', 'João Silva', 'Agendamento', 'fa-calendar')
- *   confirmarApagar('/barbeiros/3', 'Carlos Lima', 'Barbeiro', 'fa-user-tie')
- *   confirmarApagar('/servicos/2', 'Corte Masculino', 'Serviço', 'fa-cut')
- */
 function confirmarApagar(action, nome, tipo, icon) {
-    tipo  = tipo  || 'Item';
-    icon  = icon  || 'fa-trash';
-
+    tipo = tipo || 'Item';
+    icon = icon || 'fa-trash';
     document.getElementById('softDeleteTitle').textContent = 'Mover ' + tipo + ' para lixeira?';
     document.getElementById('softDeleteName').textContent  = nome;
     document.getElementById('softDeleteIcon').className    = 'fas ' + icon;
     document.getElementById('softDeleteForm').action       = action;
-
     const btn = document.getElementById('softDeleteBtn');
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-eye-slash"></i> Sim, mover para lixeira';
-
-    const modal = document.getElementById('softDeleteModal');
-    modal.style.display = 'flex';
+    document.getElementById('softDeleteModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
