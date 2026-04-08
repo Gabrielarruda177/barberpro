@@ -451,25 +451,143 @@
     }
 
     /* ── PAGINATION ── */
-    .pagination-wrap { padding: 1rem 1.5rem; border-top: 1px solid var(--dark-border); }
+.pagination-wrap {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--dark-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
 
-    /* Override Laravel pagination */
-    .pagination { gap: 0.25rem; }
-    .page-link {
-        background: var(--dark-elevated) !important;
-        border-color: var(--dark-border) !important;
-        color: var(--text-dim) !important;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.8rem;
-        border-radius: 5px !important;
+/* ── PAGINATION ── */
+.pagination-wrap {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--dark-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+.pagination-info strong {
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+/* Override Laravel pagination */
+.pagination {
+    gap: 0.3rem;
+    margin: 0;
+    flex-wrap: wrap;
+}
+
+.page-item .page-link {
+    background: var(--dark-elevated) !important;
+    border: 1px solid var(--dark-border) !important;
+    color: var(--text-dim) !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 6px !important;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.12s;
+}
+
+.page-item .page-link:hover {
+    border-color: var(--gold-dim) !important;
+    color: var(--gold) !important;
+    background: rgba(201, 168, 76, 0.07) !important;
+    transform: translateY(-1px);
+}
+
+.page-item.active .page-link {
+    background: var(--gold) !important;
+    border-color: var(--gold) !important;
+    color: #0D0D0D !important;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.25);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Botões Anterior / Próximo */
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    width: auto;
+    padding: 0 0.75rem;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted) !important;
+}
+    /* ── MODAL EXCLUIR ── */
+    .delete-modal-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1050;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
     }
-    .page-item.active .page-link {
-        background: var(--gold) !important;
-        border-color: var(--gold) !important;
-        color: #0D0D0D !important;
-        font-weight: 600;
+    .delete-modal-overlay.active { opacity: 1; visibility: visible; }
+    .delete-modal {
+        background: var(--dark-card);
+        border: 1px solid var(--dark-border);
+        border-radius: 12px;
+        width: 100%; max-width: 400px;
+        padding: 2rem; text-align: center;
+        transform: translateY(20px);
+        transition: transform 0.3s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    .page-link:hover { border-color: var(--gold-dim) !important; color: var(--gold) !important; }
+    .delete-modal-overlay.active .delete-modal { transform: translateY(0); }
+    .modal-icon-wrapper {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        background: rgba(139,51,51,0.15);
+        color: var(--danger);
+        font-size: 1.5rem;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.2rem;
+    }
+    .delete-modal h4 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-primary);
+        font-size: 1.4rem; font-weight: 700; margin-bottom: 0.75rem;
+    }
+    .delete-modal p {
+        color: var(--text-dim);
+        font-size: 0.9rem; margin-bottom: 1.8rem; line-height: 1.5;
+    }
+    .delete-modal-actions {
+        display: flex; gap: 1rem; justify-content: center;
+    }
+    .btn-danger-solid {
+        background: var(--danger);
+        color: #fff; border: none; padding: 0.55rem 1.3rem;
+        border-radius: 6px; font-weight: 600; font-size: 0.875rem;
+        cursor: pointer; transition: background 0.2s;
+    }
+    .btn-danger-solid:hover { background: #E05252; }
 </style>
 
 <div class="container-fluid" style="padding: 1.5rem; max-width: 1400px;">
@@ -602,13 +720,9 @@
                                 <a href="{{ route('agendamentos.edit', $agendamento) }}" class="btn-icon" title="Editar">
                                     <i class="fas fa-pen"></i>
                                 </a>
-                                <form action="{{ route('agendamentos.destroy', $agendamento) }}" method="POST"
-                                      onsubmit="return confirm('Confirmar exclusão?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-icon danger" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn-icon danger" title="Excluir" onclick="openDeleteModal('{{ route('agendamentos.destroy', $agendamento) }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -625,13 +739,16 @@
                 </tbody>
             </table>
         </div>
-        @if($agendamentos->hasPages())
-        <div class="pagination-wrap">
-            {{ $agendamentos->links() }}
-        </div>
-        @endif
-    </div>
-    @endif
+   @if($agendamentos->hasPages())
+<div class="pagination-wrap">
+    <span class="pagination-info">
+        Mostrando <strong>{{ $agendamentos->firstItem() }}–{{ $agendamentos->lastItem() }}</strong>
+        de <strong>{{ $agendamentos->total() }}</strong> resultados
+    </span>
+    {{ $agendamentos->links('pagination::bootstrap-5') }}
+</div>
+@endif
+@endif
 
     {{-- ══════════════════════════════════════════════
          CALENDAR VIEW
@@ -741,13 +858,9 @@
                                 <a href="{{ route('agendamentos.edit', $ag) }}" class="btn-icon" title="Editar">
                                     <i class="fas fa-pen"></i>
                                 </a>
-                                <form action="{{ route('agendamentos.destroy', $ag) }}" method="POST"
-                                      onsubmit="return confirm('Confirmar exclusão?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-icon danger" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn-icon danger" title="Excluir" onclick="openDeleteModal('{{ route('agendamentos.destroy', $ag) }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -765,4 +878,41 @@
     @endif
 
 </div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="deleteModal" class="delete-modal-overlay">
+    <div class="delete-modal">
+        <div class="modal-icon-wrapper">
+            <i class="fas fa-trash-alt"></i>
+        </div>
+        <h4>Confirmar Exclusão</h4>
+        <p>Tem certeza de que deseja excluir este agendamento? Ele será movido para a lixeira.</p>
+        <div class="delete-modal-actions">
+            <button type="button" class="btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+            <form id="deleteForm" method="POST" style="margin:0;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn-danger-solid">Sim, excluir</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(actionUrl) {
+        document.getElementById('deleteForm').action = actionUrl;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    // Fechar o modal ao clicar fora dele
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
 @endsection

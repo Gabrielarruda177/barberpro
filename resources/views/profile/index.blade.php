@@ -198,6 +198,32 @@
         opacity: 0.6;
     }
 
+    .password-shell {
+        position: relative;
+    }
+
+    .password-shell .form-control {
+        padding-right: 3rem;
+    }
+
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 0.85rem;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        font-size: 0.9rem;
+        transition: color 0.2s ease;
+    }
+
+    .toggle-password:hover {
+        color: var(--gold);
+    }
+
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -404,8 +430,13 @@
 
                     <div class="form-group">
                         <label for="senha_atual">Senha Atual</label>
-                        <input type="password" id="senha_atual" name="senha_atual" class="form-control" 
-                               placeholder="Digite a senha atual (opcional)">
+                        <div class="password-shell">
+                            <input type="password" id="senha_atual" name="senha_atual" class="form-control" 
+                                   placeholder="Digite a senha atual (opcional)">
+                            <button type="button" class="toggle-password" onclick="togglePassword('senha_atual')" aria-label="Mostrar ou ocultar senha atual">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         @error('senha_atual')
                             <div class="error-text">{{ $message }}</div>
                         @enderror
@@ -414,8 +445,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nova_senha">Nova Senha</label>
-                            <input type="password" id="nova_senha" name="nova_senha" class="form-control" 
+                            <div class="password-shell">
+                                <input type="password" id="nova_senha" name="nova_senha" class="form-control" 
                                    placeholder="Mínimo 8 caracteres">
+                                <button type="button" class="toggle-password" onclick="togglePassword('nova_senha')" aria-label="Mostrar ou ocultar nova senha">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                             @error('nova_senha')
                                 <div class="error-text">{{ $message }}</div>
                             @enderror
@@ -423,8 +459,13 @@
 
                         <div class="form-group">
                             <label for="nova_senha_confirmation">Confirmar Nova Senha</label>
-                            <input type="password" id="nova_senha_confirmation" name="nova_senha_confirmation" 
+                            <div class="password-shell">
+                                <input type="password" id="nova_senha_confirmation" name="nova_senha_confirmation" 
                                    class="form-control" placeholder="Confirme a nova senha">
+                                <button type="button" class="toggle-password" onclick="togglePassword('nova_senha_confirmation')" aria-label="Mostrar ou ocultar confirmação da nova senha">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -464,16 +505,67 @@
 
 @push('scripts')
 <script>
-    // Preview da foto quando selecionar
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.parentElement.querySelector('.toggle-password');
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+            return;
+        }
+
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+    // Tratamento dinâmico da foto
     document.getElementById('foto').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
+            // 1. Preview Imediato (Main Profile Avatar & Sidebar Avatar)
             const reader = new FileReader();
             reader.onload = function(e) {
+                const imgData = e.target.result;
+                // Avatar Principal
                 const avatar = document.querySelector('.avatar');
-                avatar.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                avatar.innerHTML = `<img src="${imgData}" alt="Preview">`;
+                
+                // Avatar Sidebar
+                const sidebarAvatar = document.querySelector('.sidebar-user-avatar');
+                if (sidebarAvatar) {
+                    sidebarAvatar.innerHTML = `<img src="${imgData}" alt="Preview" style="width:100%;height:100%;object-fit:cover;">`;
+                    // Remove letras ou estilos antigos caso houvesse a inicial
+                    sidebarAvatar.style.background = 'transparent';
+                }
             };
             reader.readAsDataURL(file);
+
+            // 2. Upload Automático e Silencioso usando Fetch
+            const form = document.getElementById('profileForm');
+            const formData = new FormData(form);
+            
+            // Exibir loading na lixeira ou toast pra usuário saber que está salvando
+            showToast('Atualizando foto de perfil...', 'success');
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => {
+                if(response.ok) {
+                    showToast('Sua foto foi atualizada com sucesso!', 'success');
+                    // Recarregar os cards de botão caso precise mostrar o "Remover foto" que tava oculto
+                    setTimeout(() => window.location.reload(), 1500); // Reload rápido para atualizar o botão "Remover" de forma limpa
+                } else {
+                    showToast('Houve um erro ao salvar a foto.', 'error');
+                }
+            }).catch(err => {
+                console.error('Erro no upload', err);
+                showToast('Erro de conexão.', 'error');
+            });
         }
     });
 

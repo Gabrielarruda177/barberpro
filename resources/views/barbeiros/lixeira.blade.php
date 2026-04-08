@@ -146,9 +146,80 @@
     .empty-state p { font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem; }
 
     .pagination-wrap {
-        padding:1rem 1.5rem; border-top:1px solid var(--dark-border);
-        display:flex; justify-content:center;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--dark-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
     }
+
+    .pagination-info {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+    }
+
+    .pagination-info strong {
+        color: var(--text-dim);
+        font-weight: 500;
+    }
+
+    .pagination {
+        gap: 0.3rem;
+        margin: 0;
+        flex-wrap: wrap;
+    }
+
+    .page-item .page-link {
+        background: var(--dark-elevated) !important;
+        border: 1px solid var(--dark-border) !important;
+        color: var(--text-dim) !important;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border-radius: 6px !important;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.12s;
+    }
+
+    .page-item .page-link:hover {
+        border-color: var(--gold-dim) !important;
+        color: var(--gold) !important;
+        background: rgba(201, 168, 76, 0.07) !important;
+        transform: translateY(-1px);
+    }
+
+    .page-item.active .page-link {
+        background: var(--gold) !important;
+        border-color: var(--gold) !important;
+        color: #0D0D0D !important;
+        font-weight: 700;
+        box-shadow: 0 0 10px rgba(201, 168, 76, 0.25);
+    }
+
+    .page-item.disabled .page-link {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        width: auto;
+        padding: 0 0.75rem;
+        gap: 0.3rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted) !important;
+    }
+
 
     /* Modal */
     .modal-overlay {
@@ -341,7 +412,11 @@
 
         @if($barbeiros->hasPages())
         <div class="pagination-wrap">
-            {{ $barbeiros->links() }}
+            <span class="pagination-info">
+                Mostrando <strong>{{ $barbeiros->firstItem() }}–{{ $barbeiros->lastItem() }}</strong>
+                de <strong>{{ $barbeiros->total() }}</strong> resultados
+            </span>
+            {{ $barbeiros->links('pagination::bootstrap-5') }}
         </div>
         @endif
 

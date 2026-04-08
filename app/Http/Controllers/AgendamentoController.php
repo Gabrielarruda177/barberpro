@@ -124,7 +124,7 @@ class AgendamentoController extends Controller
             'observacoes'      => 'nullable|string',
         ]);
 
-        $existeAgendamento = Agendamento::where('data', $request->data)
+        $existeAgendamento = Agendamento::whereDate('data', $request->data)
                                         ->where('horario', $request->horario)
                                         ->where('barbeiro_id', $request->barbeiro_id)
                                         ->whereNull('deleted_at')
@@ -173,7 +173,7 @@ class AgendamentoController extends Controller
             'status'           => 'required|in:agendado,concluido,cancelado',
         ]);
 
-        $existeConflito = Agendamento::where('data', $request->data)
+        $existeConflito = Agendamento::whereDate('data', $request->data)
                                      ->where('horario', $request->horario)
                                      ->where('barbeiro_id', $request->barbeiro_id)
                                      ->where('id', '!=', $agendamento->id)

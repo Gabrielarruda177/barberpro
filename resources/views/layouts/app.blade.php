@@ -188,20 +188,20 @@
                         @php
                             $authUser   = Auth::user();
                             $temFotoSb  = !empty($authUser->foto)
-                                && \Illuminate\Support\Facades\Storage::disk('public')->exists('fotos/' . $authUser->foto);
+                                && file_exists(public_path('fotos/' . $authUser->foto));
                         @endphp
 
                         @if($temFotoSb)
                             {{-- Foto de perfil --}}
-                            <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
+                            <div class="sidebar-user-avatar" style="width:34px;height:34px;border-radius:50%;overflow:hidden;
                                         border:2px solid rgba(201,168,76,0.4);flex-shrink:0;">
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url('fotos/' . $authUser->foto) }}"
+                                <img src="{{ asset('fotos/' . $authUser->foto) }}"
                                      alt="{{ $authUser->name }}"
                                      style="width:100%;height:100%;object-fit:cover;">
                             </div>
                         @else
                             {{-- Inicial --}}
-                            <div class="user-avatar" style="flex-shrink:0;">
+                            <div class="user-avatar sidebar-user-avatar" style="width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid rgba(201,168,76,0.4);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--dark-elevated);color:var(--text-primary);font-weight:bold;">
                                 {{ strtoupper(substr($authUser->name, 0, 1)) }}
                             </div>
                         @endif
