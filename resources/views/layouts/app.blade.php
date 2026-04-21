@@ -246,8 +246,19 @@
 
     </aside>
 
+    <button class="sidebar-overlay" id="sidebarOverlay" type="button" aria-label="Fechar menu lateral"></button>
+
     {{-- ══════════════ MAIN ══════════════ --}}
     <main class="main-content">
+        <div class="mobile-topbar">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir menu lateral" aria-controls="sidebar" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-topbar-brand">
+                <i class="fas fa-cut"></i>
+                <span>BarberPro</span>
+            </div>
+        </div>
 
         @if(session('success'))
             <div class="alert alert-success" id="flashAlert">
@@ -393,19 +404,69 @@
 <script>
 (function () {
     const KEY       = 'barberpro_sidebar';
+    const MOBILE_BP = 768;
     const container = document.getElementById('appContainer');
     const sidebar   = document.getElementById('sidebar');
     const btn       = document.getElementById('sidebarToggle');
+    const mobileBtn = document.getElementById('mobileMenuToggle');
+    const overlay   = document.getElementById('sidebarOverlay');
 
-    if (localStorage.getItem(KEY) === 'collapsed') {
-        sidebar.classList.add('collapsed');
-        container.classList.add('sidebar-collapsed');
+    const isMobile = () => window.innerWidth <= MOBILE_BP;
+
+    function setMobileMenu(open) {
+        container.classList.toggle('sidebar-mobile-open', open);
+        if (mobileBtn) {
+            mobileBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        document.body.classList.toggle('body-lock', open && isMobile());
     }
 
+    function syncSidebarState() {
+        if (isMobile()) {
+            setMobileMenu(false);
+            return;
+        }
+
+        document.body.classList.remove('body-lock');
+
+        if (localStorage.getItem(KEY) === 'collapsed') {
+            sidebar.classList.add('collapsed');
+            container.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            container.classList.remove('sidebar-collapsed');
+        }
+    }
+
+    syncSidebarState();
+
     btn.addEventListener('click', () => {
+        if (isMobile()) {
+            setMobileMenu(!container.classList.contains('sidebar-mobile-open'));
+            return;
+        }
+
         const collapsed = sidebar.classList.toggle('collapsed');
         container.classList.toggle('sidebar-collapsed', collapsed);
         localStorage.setItem(KEY, collapsed ? 'collapsed' : 'expanded');
+    });
+
+    if (mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            setMobileMenu(!container.classList.contains('sidebar-mobile-open'));
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', () => setMobileMenu(false));
+    }
+
+    window.addEventListener('resize', syncSidebarState);
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            setMobileMenu(false);
+        }
     });
 
     const flash = document.getElementById('flashAlert');

@@ -373,11 +373,11 @@
                 </div>
                 <div>
                     <div class="day-row-client">{{ $ag->nome_cliente }}</div>
-                    <div class="day-row-service">{{ $ag->servico->nome }}</div>
+                    <div class="day-row-service">{{ optional($ag->servico)->nome ?? 'Serviço não informado' }}</div>
                 </div>
                 <div class="day-row-barber">
                     <i class="fas fa-scissors" style="font-size:0.65rem; color:var(--gold-dim);"></i>
-                    {{ $ag->barbeiro->nome }}
+                    {{ optional($ag->barbeiro)->nome ?? 'Barbeiro não informado' }}
                 </div>
                 <div class="day-row-right">
                     <span class="status-badge {{ $ag->status }}">{{ ucfirst($ag->status) }}</span>

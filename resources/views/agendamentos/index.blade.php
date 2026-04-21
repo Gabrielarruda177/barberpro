@@ -184,6 +184,39 @@
         padding-right: 2.2rem;
     }
 
+    .page-shell {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .filter-actions .btn-gold {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .table-actions {
+        display: inline-flex;
+        gap: 0.35rem;
+    }
+
     /* ── STATS ROW ── */
     .stats-grid {
         display: grid;
@@ -194,6 +227,151 @@
 
     @media (max-width: 992px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .page-header,
+        .view-toggle-bar,
+        .main-card-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-shell {
+            padding: 0;
+        }
+
+        .page-header,
+        .view-toggle-bar,
+        .main-card-header,
+        .delete-modal-actions {
+            gap: 0.9rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            line-height: 1.15;
+        }
+
+        .filter-card,
+        .stat-card,
+        .main-card,
+        .delete-modal {
+            border-radius: 14px;
+        }
+
+        .filter-card,
+        .main-card-header,
+        .pagination-wrap,
+        .delete-modal {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .main-card-header {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .styled-table thead {
+            display: none;
+        }
+
+        .styled-table,
+        .styled-table tbody,
+        .styled-table tr,
+        .styled-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .styled-table tbody tr {
+            padding: 1rem;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .styled-table td {
+            padding: 0.45rem 0;
+            border: 0;
+            text-align: left !important;
+        }
+
+        .styled-table td::before {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .appointments-list-card .styled-table tbody td:nth-child(1)::before { content: "Data"; }
+        .appointments-list-card .styled-table tbody td:nth-child(2)::before { content: "Horário"; }
+        .appointments-list-card .styled-table tbody td:nth-child(3)::before { content: "Cliente"; }
+        .appointments-list-card .styled-table tbody td:nth-child(4)::before { content: "Barbeiro"; }
+        .appointments-list-card .styled-table tbody td:nth-child(5)::before { content: "Serviço"; }
+        .appointments-list-card .styled-table tbody td:nth-child(6)::before { content: "Valor"; }
+        .appointments-list-card .styled-table tbody td:nth-child(7)::before { content: "Status"; }
+        .appointments-list-card .styled-table tbody td:nth-child(8)::before { content: "Ações"; }
+
+        .appointments-day-card .styled-table tbody td:nth-child(1)::before { content: "Horário"; }
+        .appointments-day-card .styled-table tbody td:nth-child(2)::before { content: "Cliente"; }
+        .appointments-day-card .styled-table tbody td:nth-child(3)::before { content: "Barbeiro"; }
+        .appointments-day-card .styled-table tbody td:nth-child(4)::before { content: "Serviço"; }
+        .appointments-day-card .styled-table tbody td:nth-child(5)::before { content: "Status"; }
+        .appointments-day-card .styled-table tbody td:nth-child(6)::before { content: "Ações"; }
+
+        .styled-table td:last-child::before {
+            margin-bottom: 0.5rem;
+        }
+
+        .table-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .calendar-scroll {
+            overflow-x: auto;
+        }
+
+        .calendar-table {
+            min-width: 720px;
+        }
+
+        .calendar-cell {
+            height: 108px;
+        }
+
+        .delete-modal {
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid,
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header .btn-gold,
+        .view-toggle-bar .btn-ghost,
+        .filter-actions .btn-ghost,
+        .filter-actions .btn-gold,
+        .delete-modal-actions > * {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filter-actions,
+        .delete-modal-actions {
+            flex-direction: column;
+        }
+
+        .pagination-wrap {
+            align-items: stretch;
+        }
     }
 
     .stat-card {
@@ -590,7 +768,7 @@
     .btn-danger-solid:hover { background: #E05252; }
 </style>
 
-<div class="container-fluid" style="padding: 1.5rem; max-width: 1400px;">
+<div class="page-shell">
 
     {{-- ── HEADER ── --}}
     <div class="page-header">
@@ -607,12 +785,12 @@
     <div class="filter-card">
         <form method="GET" action="{{ route('agendamentos.index') }}" id="filterForm">
             <input type="hidden" name="view" value="{{ $viewMode }}">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+            <div class="filter-grid">
+                <div>
                     <label>Mês / Ano</label>
                     <input type="month" name="selected_date" value="{{ $selectedDate->format('Y-m') }}">
                 </div>
-                <div class="col-md-3">
+                <div>
                     <label>Barbeiro</label>
                     <select name="barbeiro_id">
                         <option value="">Todos</option>
@@ -623,7 +801,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div>
                     <label>Status</label>
                     <select name="status">
                         <option value="">Todos</option>
@@ -632,10 +810,10 @@
                         <option value="cancelado" {{ $status == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div>
                     <label>&nbsp;</label>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button type="submit" class="btn-gold" style="flex:1; justify-content:center;">
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-gold">
                             <i class="fas fa-filter"></i> Filtrar
                         </button>
                         <a href="{{ route('agendamentos.index') }}?view={{ $viewMode }}" class="btn-ghost">
@@ -683,11 +861,11 @@
          LIST VIEW
     ══════════════════════════════════════════════ --}}
     @if($viewMode === 'list')
-    <div class="main-card">
+    <div class="main-card appointments-list-card">
         <div class="main-card-header">
             <h5 class="main-card-title">Lista de Agendamentos</h5>
         </div>
-        <div style="overflow-x:auto;">
+        <div class="table-responsive">
             <table class="styled-table">
                 <thead>
                     <tr>
@@ -704,9 +882,9 @@
                 <tbody>
                     @forelse($agendamentos as $agendamento)
                     <tr>
-                        <td>{{ $agendamento->data->format('d/m/Y') }}</td>
-                        <td>{{ $agendamento->horario }}</td>
-                        <td class="client-name">{{ $agendamento->nome_cliente }}</td>
+                        <td data-label="Data">{{ $agendamento->data->format('d/m/Y') }}</td>
+                        <td data-label="Horário">{{ $agendamento->horario }}</td>
+                        <td data-label="Cliente" class="client-name">{{ $agendamento->nome_cliente }}</td>
                         <td>{{ optional($agendamento->barbeiro)->nome ?? '—' }}</td>
                         <td>{{ optional($agendamento->servico)->nome ?? '—' }}</td>
                         <td style="color:var(--gold); font-weight:500;">R$ {{ number_format($agendamento->valor, 2, ',', '.') }}</td>
@@ -716,7 +894,7 @@
                             </span>
                         </td>
                         <td style="text-align:right;">
-                            <div style="display:inline-flex; gap:0.35rem;">
+                            <div class="table-actions">
                                 <a href="{{ route('agendamentos.edit', $agendamento) }}" class="btn-icon" title="Editar">
                                     <i class="fas fa-pen"></i>
                                 </a>
@@ -769,6 +947,7 @@
                 </a>
             </div>
         </div>
+        <div class="calendar-scroll">
         <table class="calendar-table">
             <thead>
                 <tr>
@@ -818,10 +997,11 @@
                 @endfor
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Day appointments --}}
-    <div class="main-card">
+    <div class="main-card appointments-day-card">
         <div class="main-card-header">
             <h5 class="main-card-title">
                 Agendamentos · {{ $selectedDate->format('d/m/Y') }}
@@ -831,7 +1011,7 @@
             </span>
         </div>
         @if($agendamentosDia->isNotEmpty())
-        <div style="overflow-x:auto;">
+        <div class="table-responsive">
             <table class="styled-table">
                 <thead>
                     <tr>
@@ -854,7 +1034,7 @@
                             <span class="status-badge {{ $ag->status }}">{{ ucfirst($ag->status) }}</span>
                         </td>
                         <td style="text-align:right;">
-                            <div style="display:inline-flex; gap:0.35rem;">
+                            <div class="table-actions">
                                 <a href="{{ route('agendamentos.edit', $ag) }}" class="btn-icon" title="Editar">
                                     <i class="fas fa-pen"></i>
                                 </a>
